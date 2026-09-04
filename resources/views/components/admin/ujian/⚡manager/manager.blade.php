@@ -49,9 +49,11 @@
                             </td>
                             <td class="px-5 py-3 text-right text-sm">
                                 <a href="{{ route('admin.ujian.peserta', $ujian) }}" class="mr-3 text-brand-500 hover:text-brand-600">Peserta</a>
-                                <a href="{{ route('admin.ujian.leaderboard', $ujian) }}" class="mr-3 text-brand-500 hover:text-brand-600">Leaderboard</a>
-                                <button wire:click="edit({{ $ujian->id }})" class="mr-3 text-brand-500 hover:text-brand-600">Ubah</button>
-                                <button wire:click="delete({{ $ujian->id }})" wire:confirm="Yakin ingin menghapus ujian ini?" class="text-error-500 hover:text-error-600">Hapus</button>
+                                <x-common.table-actions>
+                                    <x-common.dropdown-item as="a" href="{{ route('admin.ujian.leaderboard', $ujian) }}">Leaderboard</x-common.dropdown-item>
+                                    <x-common.dropdown-item wire:click="edit({{ $ujian->id }})">Ubah</x-common.dropdown-item>
+                                    <x-common.dropdown-item danger wire:click="delete({{ $ujian->id }})" wire:confirm="Yakin ingin menghapus ujian ini?">Hapus</x-common.dropdown-item>
+                                </x-common.table-actions>
                             </td>
                         </tr>
                     @empty
@@ -106,16 +108,14 @@
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Sesi Mulai</label>
-                        <input type="datetime-local" wire:model="sesiMulai"
-                            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
+                        <x-form.date-picker id="ujian-sesi-mulai" label="Sesi Mulai" enable-time date-format="Y-m-d\TH:i"
+                            wire:model="sesiMulai" placeholder="Pilih tanggal & jam mulai" />
                         @error('sesiMulai') <p class="mt-1 text-sm text-error-500">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
-                        <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Sesi Selesai</label>
-                        <input type="datetime-local" wire:model="sesiSelesai"
-                            class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
+                        <x-form.date-picker id="ujian-sesi-selesai" label="Sesi Selesai" enable-time date-format="Y-m-d\TH:i"
+                            wire:model="sesiSelesai" placeholder="Pilih tanggal & jam selesai" />
                         @error('sesiSelesai') <p class="mt-1 text-sm text-error-500">{{ $message }}</p> @enderror
                     </div>
                 </div>

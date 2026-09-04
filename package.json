@@ -9,7 +9,8 @@
     "dependencies": {
         "alpinejs": "^3.14.9",
         "apexcharts": "^7.0.0",
-        "axios": "^1.7.9"
+        "axios": "^1.7.9",
+        "flatpickr": "^4.6.13"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",

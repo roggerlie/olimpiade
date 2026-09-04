@@ -34,8 +34,10 @@
                             </td>
                             <td class="px-5 py-3 text-right text-sm">
                                 <a href="{{ route('admin.bank-soal.soal', $bankSoal) }}" class="mr-3 text-brand-500 hover:text-brand-600">Kelola Soal</a>
-                                <button wire:click="edit({{ $bankSoal->id }})" class="mr-3 text-brand-500 hover:text-brand-600">Ubah</button>
-                                <button wire:click="delete({{ $bankSoal->id }})" wire:confirm="Yakin ingin menghapus bank soal ini? Semua soal di dalamnya ikut terhapus." class="text-error-500 hover:text-error-600">Hapus</button>
+                                <x-common.table-actions>
+                                    <x-common.dropdown-item wire:click="edit({{ $bankSoal->id }})">Ubah</x-common.dropdown-item>
+                                    <x-common.dropdown-item danger wire:click="delete({{ $bankSoal->id }})" wire:confirm="Yakin ingin menghapus bank soal ini? Semua soal di dalamnya ikut terhapus.">Hapus</x-common.dropdown-item>
+                                </x-common.table-actions>
                             </td>
                         </tr>
                     @empty

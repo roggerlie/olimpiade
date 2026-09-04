@@ -45,8 +45,10 @@
                             <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $peserta->jenjang->nama }}</td>
                             <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $peserta->asal_sekolah }}</td>
                             <td class="px-5 py-3 text-right text-sm">
-                                <button wire:click="edit({{ $peserta->id }})" class="mr-3 text-brand-500 hover:text-brand-600">Ubah</button>
-                                <button wire:click="delete({{ $peserta->id }})" wire:confirm="Yakin ingin menghapus peserta ini? Akun login &amp; riwayat ujiannya ikut terhapus." class="text-error-500 hover:text-error-600">Hapus</button>
+                                <x-common.table-actions>
+                                    <x-common.dropdown-item wire:click="edit({{ $peserta->id }})">Ubah</x-common.dropdown-item>
+                                    <x-common.dropdown-item danger wire:click="delete({{ $peserta->id }})" wire:confirm="Yakin ingin menghapus peserta ini? Akun login &amp; riwayat ujiannya ikut terhapus.">Hapus</x-common.dropdown-item>
+                                </x-common.table-actions>
                             </td>
                         </tr>
                     @empty

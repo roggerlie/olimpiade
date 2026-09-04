@@ -26,8 +26,10 @@
 
                     <div class="flex shrink-0 items-center gap-3 text-sm">
                         <button @click="open = !open" class="text-gray-500 hover:text-gray-700 dark:text-gray-400" x-text="open ? 'Sembunyikan' : 'Lihat Pilihan'"></button>
-                        <button wire:click="edit({{ $soal->id }})" class="text-brand-500 hover:text-brand-600">Ubah</button>
-                        <button wire:click="delete({{ $soal->id }})" wire:confirm="Yakin ingin menghapus soal ini?" class="text-error-500 hover:text-error-600">Hapus</button>
+                        <x-common.table-actions>
+                            <x-common.dropdown-item wire:click="edit({{ $soal->id }})">Ubah</x-common.dropdown-item>
+                            <x-common.dropdown-item danger wire:click="delete({{ $soal->id }})" wire:confirm="Yakin ingin menghapus soal ini?">Hapus</x-common.dropdown-item>
+                        </x-common.table-actions>
                     </div>
                 </div>
 
