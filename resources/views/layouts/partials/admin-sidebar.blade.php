@@ -15,10 +15,11 @@
     @mouseenter="if (!$store.sidebar.isExpanded) $store.sidebar.setHovered(true)"
     @mouseleave="$store.sidebar.setHovered(false)">
 
-    <div class="pt-8 pb-7 flex" :class="(!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen) ? 'xl:justify-center' : 'justify-start'">
-        <a href="{{ route('admin.dashboard') }}" class="text-lg font-bold text-brand-500">
-            <span x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen">CBT Olimpiade</span>
-            <span x-show="!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen">CO</span>
+    <div class="pt-8 pb-7 flex items-center gap-2" :class="(!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen) ? 'xl:justify-center' : 'justify-start'">
+        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2">
+            <img src="/images/logo/logo-icon.svg" alt="CBT Olimpiade" width="32" height="32" class="shrink-0" />
+            <span x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen"
+                class="text-lg font-bold text-brand-500">CBT Olimpiade</span>
         </a>
     </div>
 
