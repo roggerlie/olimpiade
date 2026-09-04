@@ -3,7 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Jenjang;
-use App\Models\Siswa;
+use App\Models\Peserta;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +19,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
  * Processes row-by-row so one bad row doesn't abort the whole file; failures
  * are collected in $errors and surfaced back to the admin.
  */
-class SiswaImport implements ToCollection, WithHeadingRow
+class PesertaImport implements ToCollection, WithHeadingRow
 {
     public int $imported = 0;
 
@@ -40,7 +40,7 @@ class SiswaImport implements ToCollection, WithHeadingRow
             ];
 
             $validator = Validator::make($data, [
-                'noreg' => ['required', 'string', 'size:7', 'unique:siswa,noreg', 'unique:users,username'],
+                'noreg' => ['required', 'string', 'size:7', 'unique:peserta,noreg', 'unique:users,username'],
                 'nama' => ['required', 'string', 'max:255'],
                 'jenjang' => ['required', 'string'],
                 'asal_sekolah' => ['required', 'string', 'max:255'],
@@ -66,9 +66,9 @@ class SiswaImport implements ToCollection, WithHeadingRow
                     'name' => $data['nama'],
                     'password' => Hash::make($data['password'] !== '' ? $data['password'] : $data['noreg']),
                 ]);
-                $user->assignRole('siswa');
+                $user->assignRole('peserta');
 
-                Siswa::create([
+                Peserta::create([
                     'user_id' => $user->id,
                     'jenjang_id' => $jenjang->id,
                     'noreg' => $data['noreg'],

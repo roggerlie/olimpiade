@@ -41,39 +41,39 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                    @forelse ($this->siswa as $siswa)
-                        @php $siswaUjian = $siswa->siswaUjian->first(); @endphp
-                        <tr wire:key="siswa-ujian-{{ $siswa->id }}">
-                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $siswa->noreg }}</td>
-                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $siswa->nama }}</td>
+                    @forelse ($this->peserta as $peserta)
+                        @php $pesertaUjian = $peserta->pesertaUjian->first(); @endphp
+                        <tr wire:key="peserta-ujian-{{ $peserta->id }}">
+                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $peserta->noreg }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $peserta->nama }}</td>
                             <td class="px-5 py-3 text-sm">
-                                @if (!$siswaUjian)
+                                @if (!$pesertaUjian)
                                     <x-ui.badge color="light">Belum Terdaftar</x-ui.badge>
-                                @elseif ($siswaUjian->sudahSubmit())
+                                @elseif ($pesertaUjian->sudahSubmit())
                                     <x-ui.badge color="success">Selesai</x-ui.badge>
-                                @elseif ($siswaUjian->waktu_mulai)
+                                @elseif ($pesertaUjian->waktu_mulai)
                                     <x-ui.badge color="warning">Sedang Mengerjakan</x-ui.badge>
                                 @else
                                     <x-ui.badge color="primary">Terdaftar</x-ui.badge>
                                 @endif
                             </td>
                             <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">
-                                {{ $siswaUjian?->waktu_mulai?->translatedFormat('d M Y, H:i') ?? '—' }}
+                                {{ $pesertaUjian?->waktu_mulai?->translatedFormat('d M Y, H:i') ?? '—' }}
                             </td>
                             <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">
-                                {{ $siswaUjian?->waktu_selesai?->translatedFormat('d M Y, H:i') ?? '—' }}
+                                {{ $pesertaUjian?->waktu_selesai?->translatedFormat('d M Y, H:i') ?? '—' }}
                             </td>
                             <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">
-                                {{ $siswaUjian?->sudahSubmit() ? $siswaUjian->nilai : '—' }}
+                                {{ $pesertaUjian?->sudahSubmit() ? $pesertaUjian->nilai : '—' }}
                             </td>
                             <td class="px-5 py-3 text-right text-sm whitespace-nowrap">
-                                @if (!$siswaUjian)
-                                    <button wire:click="toggleDaftar({{ $siswa->id }})" class="text-brand-500 hover:text-brand-600">Daftarkan</button>
+                                @if (!$pesertaUjian)
+                                    <button wire:click="toggleDaftar({{ $peserta->id }})" class="text-brand-500 hover:text-brand-600">Daftarkan</button>
                                 @else
-                                    @if (!$siswaUjian->waktu_mulai)
-                                        <button wire:click="toggleDaftar({{ $siswa->id }})" wire:confirm="Batalkan pendaftaran {{ $siswa->nama }}?" class="mr-3 text-error-500 hover:text-error-600">Batalkan</button>
+                                    @if (!$pesertaUjian->waktu_mulai)
+                                        <button wire:click="toggleDaftar({{ $peserta->id }})" wire:confirm="Batalkan pendaftaran {{ $peserta->nama }}?" class="mr-3 text-error-500 hover:text-error-600">Batalkan</button>
                                     @else
-                                        <button wire:click="resetProgres({{ $siswa->id }})" wire:confirm="Reset progres {{ $siswa->nama }}? Jawaban &amp; waktu yang sudah tercatat akan dihapus." class="text-error-500 hover:text-error-600">Reset</button>
+                                        <button wire:click="resetProgres({{ $peserta->id }})" wire:confirm="Reset progres {{ $peserta->nama }}? Jawaban &amp; waktu yang sudah tercatat akan dihapus." class="text-error-500 hover:text-error-600">Reset</button>
                                     @endif
                                 @endif
                             </td>
@@ -90,7 +90,7 @@
         </div>
 
         <div class="mt-4">
-            {{ $this->siswa->links() }}
+            {{ $this->peserta->links() }}
         </div>
     </x-common.component-card>
 </div>

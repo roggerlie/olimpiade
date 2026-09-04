@@ -38,15 +38,15 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                    @forelse ($this->siswa as $siswa)
-                        <tr wire:key="siswa-{{ $siswa->id }}">
-                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $siswa->noreg }}</td>
-                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $siswa->nama }}</td>
-                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $siswa->jenjang->nama }}</td>
-                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $siswa->asal_sekolah }}</td>
+                    @forelse ($this->peserta as $peserta)
+                        <tr wire:key="peserta-{{ $peserta->id }}">
+                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $peserta->noreg }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $peserta->nama }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $peserta->jenjang->nama }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $peserta->asal_sekolah }}</td>
                             <td class="px-5 py-3 text-right text-sm">
-                                <button wire:click="edit({{ $siswa->id }})" class="mr-3 text-brand-500 hover:text-brand-600">Ubah</button>
-                                <button wire:click="delete({{ $siswa->id }})" wire:confirm="Yakin ingin menghapus peserta ini? Akun login &amp; riwayat ujiannya ikut terhapus." class="text-error-500 hover:text-error-600">Hapus</button>
+                                <button wire:click="edit({{ $peserta->id }})" class="mr-3 text-brand-500 hover:text-brand-600">Ubah</button>
+                                <button wire:click="delete({{ $peserta->id }})" wire:confirm="Yakin ingin menghapus peserta ini? Akun login &amp; riwayat ujiannya ikut terhapus." class="text-error-500 hover:text-error-600">Hapus</button>
                             </td>
                         </tr>
                     @empty
@@ -61,7 +61,7 @@
         </div>
 
         <div class="mt-4">
-            {{ $this->siswa->links() }}
+            {{ $this->peserta->links() }}
         </div>
     </x-common.component-card>
 
@@ -120,5 +120,5 @@
         </form>
     </x-ui.modal>
 
-    <livewire:admin.siswa.import />
+    <livewire:admin.peserta.import />
 </div>

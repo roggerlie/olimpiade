@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Cbt;
 
 use App\Http\Controllers\Controller;
-use App\Models\SiswaUjian;
+use App\Models\PesertaUjian;
 use App\Services\ExamAttemptService;
 use App\Services\ScoringService;
 use Illuminate\Contracts\View\View;
@@ -20,13 +20,13 @@ class ExamController extends Controller
      */
     public function dashboard(): View
     {
-        $siswaUjian = SiswaUjian::query()
-            ->whereHas('siswa', fn ($q) => $q->where('user_id', Auth::id()))
+        $pesertaUjian = PesertaUjian::query()
+            ->whereHas('peserta', fn ($q) => $q->where('user_id', Auth::id()))
             ->with(['ujian.pelajaran', 'ujian.jenjang'])
             ->get()
             ->sortBy('ujian.sesi_mulai');
 
-        return view('cbt.dashboard', ['siswaUjian' => $siswaUjian]);
+        return view('cbt.dashboard', ['pesertaUjian' => $pesertaUjian]);
     }
 
     /**
@@ -34,21 +34,21 @@ class ExamController extends Controller
      * or, if already started, just resume it — never re-rolls a running or
      * finished attempt.
      */
-    public function mulai(SiswaUjian $siswaUjian, ExamAttemptService $attempts): RedirectResponse
+    public function mulai(PesertaUjian $pesertaUjian, ExamAttemptService $attempts): RedirectResponse
     {
-        Gate::authorize('view', $siswaUjian);
+        Gate::authorize('view', $pesertaUjian);
 
-        if ($siswaUjian->sudahSubmit()) {
-            return redirect()->route('cbt.ujian.hasil', $siswaUjian);
+        if ($pesertaUjian->sudahSubmit()) {
+            return redirect()->route('cbt.ujian.hasil', $pesertaUjian);
         }
 
-        if (! $siswaUjian->ujian->sesiSedangBerlangsung()) {
+        if (! $pesertaUjian->ujian->sesiSedangBerlangsung()) {
             return back()->with('error', 'Sesi ujian ini belum dibuka atau sudah ditutup.');
         }
 
-        $attempts->mulai($siswaUjian);
+        $attempts->mulai($pesertaUjian);
 
-        return redirect()->route('cbt.ujian.kerjakan', $siswaUjian);
+        return redirect()->route('cbt.ujian.kerjakan', $pesertaUjian);
     }
 
     /**
@@ -56,59 +56,59 @@ class ExamController extends Controller
      * the correct answer never reaches the browser, only used server-side
      * at scoring time.
      */
-    public function kerjakan(SiswaUjian $siswaUjian, ScoringService $scoring): View|RedirectResponse
+    public function kerjakan(PesertaUjian $pesertaUjian, ScoringService $scoring): View|RedirectResponse
     {
-        Gate::authorize('view', $siswaUjian);
+        Gate::authorize('view', $pesertaUjian);
 
-        if ($siswaUjian->sudahSubmit()) {
-            return redirect()->route('cbt.ujian.hasil', $siswaUjian);
+        if ($pesertaUjian->sudahSubmit()) {
+            return redirect()->route('cbt.ujian.hasil', $pesertaUjian);
         }
 
-        if ($siswaUjian->waktu_mulai === null) {
+        if ($pesertaUjian->waktu_mulai === null) {
             return redirect()->route('cbt.dashboard')->with('error', 'Ujian ini belum kamu mulai.');
         }
 
-        if ($siswaUjian->waktuHabis()) {
-            $scoring->submit($siswaUjian);
+        if ($pesertaUjian->waktuHabis()) {
+            $scoring->submit($pesertaUjian);
 
-            return redirect()->route('cbt.ujian.hasil', $siswaUjian)
+            return redirect()->route('cbt.ujian.hasil', $pesertaUjian)
                 ->with('error', 'Waktu ujian sudah habis, jawabanmu otomatis dikumpulkan.');
         }
 
-        $siswaUjian->load('ujian');
+        $pesertaUjian->load('ujian');
 
         // The correct `jawaban` column on Soal is deliberately never selected
         // here — it must not reach the browser before the attempt is scored.
-        $soal = $siswaUjian->siswaSoal()
+        $soal = $pesertaUjian->pesertaSoal()
             ->with(['soal:id,pertanyaan,pilih_a,pilih_b,pilih_c,pilih_d,pilih_e'])
             ->orderBy('urutan')
             ->get(['id', 'urutan', 'soal_id', 'jawaban'])
-            ->map(fn ($siswaSoal) => [
-                'soalId' => $siswaSoal->soal_id,
-                'urutan' => $siswaSoal->urutan,
-                'pertanyaan' => $siswaSoal->soal->pertanyaan,
-                'pilihan' => $siswaSoal->soal->pilihan(),
-                'jawabanSaya' => $siswaSoal->jawaban,
+            ->map(fn ($pesertaSoal) => [
+                'soalId' => $pesertaSoal->soal_id,
+                'urutan' => $pesertaSoal->urutan,
+                'pertanyaan' => $pesertaSoal->soal->pertanyaan,
+                'pilihan' => $pesertaSoal->soal->pilihan(),
+                'jawabanSaya' => $pesertaSoal->jawaban,
             ])
             ->values();
 
         return view('cbt.kerjakan', [
-            'siswaUjian' => $siswaUjian,
+            'pesertaUjian' => $pesertaUjian,
             'soal' => $soal,
-            'batasWaktu' => $siswaUjian->batasWaktu(),
+            'batasWaktu' => $pesertaUjian->batasWaktu(),
         ]);
     }
 
-    public function hasil(SiswaUjian $siswaUjian): View|RedirectResponse
+    public function hasil(PesertaUjian $pesertaUjian): View|RedirectResponse
     {
-        Gate::authorize('view', $siswaUjian);
+        Gate::authorize('view', $pesertaUjian);
 
-        if (! $siswaUjian->sudahSubmit()) {
-            return redirect()->route('cbt.ujian.kerjakan', $siswaUjian);
+        if (! $pesertaUjian->sudahSubmit()) {
+            return redirect()->route('cbt.ujian.kerjakan', $pesertaUjian);
         }
 
-        $siswaUjian->load('ujian.pelajaran');
+        $pesertaUjian->load('ujian.pelajaran');
 
-        return view('cbt.hasil', ['siswaUjian' => $siswaUjian]);
+        return view('cbt.hasil', ['pesertaUjian' => $pesertaUjian]);
     }
 }

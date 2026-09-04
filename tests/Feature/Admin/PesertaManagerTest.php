@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Jenjang;
-use App\Models\Siswa;
+use App\Models\Peserta;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -12,9 +12,9 @@ uses(RefreshDatabase::class);
 test('it lists existing peserta with their jenjang', function () {
     actingAsAdmin();
     $jenjang = Jenjang::factory()->create(['nama' => 'Sekolah Dasar']);
-    Siswa::factory()->create(['jenjang_id' => $jenjang->id, 'nama' => 'Budi', 'noreg' => '1000001']);
+    Peserta::factory()->create(['jenjang_id' => $jenjang->id, 'nama' => 'Budi', 'noreg' => '1000001']);
 
-    Livewire::test('admin.siswa.manager')
+    Livewire::test('admin.peserta.manager')
         ->assertSee('Budi')
         ->assertSee('1000001')
         ->assertSee('Sekolah Dasar');
@@ -23,19 +23,19 @@ test('it lists existing peserta with their jenjang', function () {
 test('it validates required fields before creating', function () {
     actingAsAdmin();
 
-    Livewire::test('admin.siswa.manager')
+    Livewire::test('admin.peserta.manager')
         ->call('create')
         ->call('save')
         ->assertHasErrors(['noreg' => 'required', 'nama' => 'required', 'jenjangId' => 'required', 'asalSekolah' => 'required', 'password' => 'required']);
 
-    expect(Siswa::count())->toBe(0);
+    expect(Peserta::count())->toBe(0);
 });
 
 test('it creates a peserta with a matching login account', function () {
     actingAsAdmin();
     $jenjang = Jenjang::factory()->create();
 
-    Livewire::test('admin.siswa.manager')
+    Livewire::test('admin.peserta.manager')
         ->call('create')
         ->set('noreg', '1000001')
         ->set('nama', 'Budi Santoso')
@@ -46,22 +46,22 @@ test('it creates a peserta with a matching login account', function () {
         ->assertHasNoErrors()
         ->assertSet('showModal', false);
 
-    $siswa = Siswa::where('noreg', '1000001')->first();
-    expect($siswa)->not->toBeNull();
+    $peserta = Peserta::where('noreg', '1000001')->first();
+    expect($peserta)->not->toBeNull();
 
     $user = User::where('username', '1000001')->first();
     expect($user)->not->toBeNull()
-        ->and($user->hasRole('siswa'))->toBeTrue()
-        ->and($siswa->user_id)->toBe($user->id)
+        ->and($user->hasRole('peserta'))->toBeTrue()
+        ->and($peserta->user_id)->toBe($user->id)
         ->and(Hash::check('rahasia', $user->password))->toBeTrue();
 });
 
 test('it rejects a duplicate noreg', function () {
     actingAsAdmin();
-    Siswa::factory()->create(['noreg' => '1000001']);
+    Peserta::factory()->create(['noreg' => '1000001']);
     $jenjang = Jenjang::factory()->create();
 
-    Livewire::test('admin.siswa.manager')
+    Livewire::test('admin.peserta.manager')
         ->call('create')
         ->set('noreg', '1000001')
         ->set('nama', 'Lain')
@@ -71,45 +71,45 @@ test('it rejects a duplicate noreg', function () {
         ->call('save')
         ->assertHasErrors(['noreg']);
 
-    expect(Siswa::count())->toBe(1);
+    expect(Peserta::count())->toBe(1);
 });
 
 test('it prefills and updates an existing peserta without requiring a new password', function () {
     actingAsAdmin();
-    $siswa = Siswa::factory()->create(['nama' => 'Lama']);
+    $peserta = Peserta::factory()->create(['nama' => 'Lama']);
 
-    Livewire::test('admin.siswa.manager')
-        ->call('edit', $siswa->id)
+    Livewire::test('admin.peserta.manager')
+        ->call('edit', $peserta->id)
         ->assertSet('nama', 'Lama')
         ->assertSet('password', '')
         ->set('nama', 'Baru')
         ->call('save')
         ->assertHasNoErrors();
 
-    expect($siswa->fresh()->nama)->toBe('Baru');
+    expect($peserta->fresh()->nama)->toBe('Baru');
 });
 
 test('it updates the login username when noreg changes', function () {
     actingAsAdmin();
-    $siswa = Siswa::factory()->create(['noreg' => '1000001']);
+    $peserta = Peserta::factory()->create(['noreg' => '1000001']);
 
-    Livewire::test('admin.siswa.manager')
-        ->call('edit', $siswa->id)
+    Livewire::test('admin.peserta.manager')
+        ->call('edit', $peserta->id)
         ->set('noreg', '2000002')
         ->call('save')
         ->assertHasNoErrors();
 
-    expect($siswa->fresh()->noreg)->toBe('2000002')
-        ->and($siswa->user->fresh()->username)->toBe('2000002');
+    expect($peserta->fresh()->noreg)->toBe('2000002')
+        ->and($peserta->user->fresh()->username)->toBe('2000002');
 });
 
 test('deleting a peserta also removes their login account', function () {
     actingAsAdmin();
-    $siswa = Siswa::factory()->create();
-    $userId = $siswa->user_id;
+    $peserta = Peserta::factory()->create();
+    $userId = $peserta->user_id;
 
-    Livewire::test('admin.siswa.manager')->call('delete', $siswa->id);
+    Livewire::test('admin.peserta.manager')->call('delete', $peserta->id);
 
-    expect(Siswa::find($siswa->id))->toBeNull()
+    expect(Peserta::find($peserta->id))->toBeNull()
         ->and(User::find($userId))->toBeNull();
 });

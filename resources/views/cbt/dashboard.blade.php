@@ -8,13 +8,13 @@
         <x-ui.alert variant="error" class="mb-6">{{ session('error') }}</x-ui.alert>
     @endif
 
-    @if ($siswaUjian->isEmpty())
+    @if ($pesertaUjian->isEmpty())
         <div class="rounded-2xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-500 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400">
             Belum ada ujian yang terdaftar untukmu. Hubungi panitia jika kamu merasa ini keliru.
         </div>
     @else
         <div class="space-y-4">
-            @foreach ($siswaUjian as $su)
+            @foreach ($pesertaUjian as $su)
                 <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                     <div class="flex flex-wrap items-center justify-between gap-4">
                         <div>

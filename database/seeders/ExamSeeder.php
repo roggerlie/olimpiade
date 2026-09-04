@@ -5,8 +5,8 @@ namespace Database\Seeders;
 use App\Models\BankSoal;
 use App\Models\Jenjang;
 use App\Models\Pelajaran;
-use App\Models\Siswa;
-use App\Models\SiswaUjian;
+use App\Models\Peserta;
+use App\Models\PesertaUjian;
 use App\Models\Soal;
 use App\Models\Ujian;
 use Illuminate\Database\Seeder;
@@ -14,7 +14,7 @@ use Illuminate\Database\Seeder;
 /**
  * Seeds a complete, ready-to-take exam per jenjang (SD/SMP/SMA): bank soal
  * with real arithmetic questions, an ujian whose session window is open
- * right now, and a few siswa already registered for it — so a student can
+ * right now, and a few peserta already registered for it — so a student can
  * log in and run the whole "mulai → kerjakan → submit" flow without any
  * admin setup first.
  */
@@ -26,7 +26,7 @@ class ExamSeeder extends Seeder
      *
      * @var array<int, array{noreg: string, nama: string, jenjang: string}>
      */
-    private array $siswaDibuat = [];
+    private array $pesertaDibuat = [];
 
     public function run(): void
     {
@@ -63,24 +63,24 @@ class ExamSeeder extends Seeder
                 'deskripsi' => 'Sesi ujian percobaan — dibuat oleh ExamSeeder.',
             ]);
 
-            // 3 siswa per jenjang, sudah terdaftar di ujian tapi belum
+            // 3 peserta per jenjang, sudah terdaftar di ujian tapi belum
             // "Mulai" — siap dipakai untuk test end-to-end dari login.
             for ($i = 1; $i <= 3; $i++) {
-                $siswa = Siswa::factory()->create([
+                $peserta = Peserta::factory()->create([
                     'jenjang_id' => $jenjang->id,
                     'noreg' => str_pad((string) $noreg++, 7, '0', STR_PAD_LEFT),
-                    'nama' => "Siswa Demo {$tingkat} {$i}",
+                    'nama' => "Peserta Demo {$tingkat} {$i}",
                     'asal_sekolah' => "Sekolah Demo {$tingkat}",
                 ]);
 
-                SiswaUjian::factory()->create([
-                    'siswa_id' => $siswa->id,
+                PesertaUjian::factory()->create([
+                    'peserta_id' => $peserta->id,
                     'ujian_id' => $ujian->id,
                 ]);
 
-                $this->siswaDibuat[] = [
-                    'noreg' => $siswa->noreg,
-                    'nama' => $siswa->nama,
+                $this->pesertaDibuat[] = [
+                    'noreg' => $peserta->noreg,
+                    'nama' => $peserta->nama,
                     'jenjang' => $tingkat,
                 ];
             }
@@ -169,11 +169,11 @@ class ExamSeeder extends Seeder
             return;
         }
 
-        $this->command->info('Data ujian percobaan berhasil dibuat. Login siswa (password: "password"):');
+        $this->command->info('Data ujian percobaan berhasil dibuat. Login peserta (password: "password"):');
 
         $this->command->table(
             ['Noreg (username)', 'Nama', 'Jenjang'],
-            $this->siswaDibuat
+            $this->pesertaDibuat
         );
     }
 }

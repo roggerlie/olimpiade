@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\SiswaUjian;
+use App\Models\PesertaUjian;
 
 /**
  * Finalizes an attempt: tallies benar/salah against each soal's real
@@ -15,28 +15,28 @@ use App\Models\SiswaUjian;
  */
 class ScoringService
 {
-    public function submit(SiswaUjian $siswaUjian): void
+    public function submit(PesertaUjian $pesertaUjian): void
     {
-        if ($siswaUjian->sudahSubmit()) {
+        if ($pesertaUjian->sudahSubmit()) {
             return;
         }
 
         $benar = 0;
         $salah = 0;
 
-        foreach ($siswaUjian->siswaSoal()->with('soal:id,jawaban')->get() as $siswaSoal) {
-            if ($siswaSoal->jawaban === null) {
+        foreach ($pesertaUjian->pesertaSoal()->with('soal:id,jawaban')->get() as $pesertaSoal) {
+            if ($pesertaSoal->jawaban === null) {
                 continue;
             }
 
-            if ($siswaSoal->jawaban === $siswaSoal->soal->jawaban) {
+            if ($pesertaSoal->jawaban === $pesertaSoal->soal->jawaban) {
                 $benar++;
             } else {
                 $salah++;
             }
         }
 
-        $siswaUjian->update([
+        $pesertaUjian->update([
             'waktu_selesai' => now(),
             'benar' => $benar,
             'salah' => $salah,

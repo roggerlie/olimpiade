@@ -43,9 +43,9 @@ class Ujian extends Model
         return $this->belongsTo(Pelajaran::class);
     }
 
-    public function siswaUjian(): HasMany
+    public function pesertaUjian(): HasMany
     {
-        return $this->hasMany(SiswaUjian::class);
+        return $this->hasMany(PesertaUjian::class);
     }
 
     /**

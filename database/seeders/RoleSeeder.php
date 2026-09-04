@@ -12,7 +12,7 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        collect(['admin', 'siswa'])->each(
+        collect(['admin', 'peserta'])->each(
             fn (string $role) => Role::findOrCreate($role, 'web')
         );
     }

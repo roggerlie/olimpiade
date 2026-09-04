@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\SiswaUjian;
+use App\Models\PesertaUjian;
 use App\Models\Ujian;
 use App\Services\LeaderboardService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -9,9 +9,9 @@ uses(RefreshDatabase::class);
 
 test('it ranks by nilai descending', function () {
     $ujian = Ujian::factory()->create();
-    $rendah = SiswaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 18]);
-    $tinggi = SiswaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 81]);
-    $sedang = SiswaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 45]);
+    $rendah = PesertaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 18]);
+    $tinggi = PesertaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 81]);
+    $sedang = PesertaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 45]);
 
     $ranking = (new LeaderboardService)->ranking($ujian);
 
@@ -20,11 +20,11 @@ test('it ranks by nilai descending', function () {
 
 test('it breaks a nilai tie by the fastest durasi pengerjaan', function () {
     $ujian = Ujian::factory()->create();
-    $lambat = SiswaUjian::factory()->create([
+    $lambat = PesertaUjian::factory()->create([
         'ujian_id' => $ujian->id, 'nilai' => 50,
         'waktu_mulai' => now()->subMinutes(60), 'waktu_selesai' => now(),
     ]);
-    $cepat = SiswaUjian::factory()->create([
+    $cepat = PesertaUjian::factory()->create([
         'ujian_id' => $ujian->id, 'nilai' => 50,
         'waktu_mulai' => now()->subMinutes(20), 'waktu_selesai' => now(),
     ]);
@@ -36,9 +36,9 @@ test('it breaks a nilai tie by the fastest durasi pengerjaan', function () {
 
 test('it excludes attempts that were never submitted', function () {
     $ujian = Ujian::factory()->create();
-    $selesai = SiswaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id]);
-    SiswaUjian::factory()->create(['ujian_id' => $ujian->id, 'waktu_mulai' => now()]); // in progress
-    SiswaUjian::factory()->create(['ujian_id' => $ujian->id]); // not started
+    $selesai = PesertaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id]);
+    PesertaUjian::factory()->create(['ujian_id' => $ujian->id, 'waktu_mulai' => now()]); // in progress
+    PesertaUjian::factory()->create(['ujian_id' => $ujian->id]); // not started
 
     $ranking = (new LeaderboardService)->ranking($ujian);
 
@@ -48,8 +48,8 @@ test('it excludes attempts that were never submitted', function () {
 test('it only ranks attempts for the given ujian', function () {
     $ujian = Ujian::factory()->create();
     $lain = Ujian::factory()->create();
-    $milikSaya = SiswaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id]);
-    SiswaUjian::factory()->selesai()->create(['ujian_id' => $lain->id]);
+    $milikSaya = PesertaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id]);
+    PesertaUjian::factory()->selesai()->create(['ujian_id' => $lain->id]);
 
     $ranking = (new LeaderboardService)->ranking($ujian);
 

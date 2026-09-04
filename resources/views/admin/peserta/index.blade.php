@@ -1,3 +1,3 @@
 <x-layouts.admin title="Peserta" page-title="Peserta">
-    <livewire:admin.siswa.manager />
+    <livewire:admin.peserta.manager />
 </x-layouts.admin>

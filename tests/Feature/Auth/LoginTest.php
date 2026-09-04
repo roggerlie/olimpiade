@@ -7,7 +7,7 @@ use Spatie\Permission\Models\Role;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    collect(['admin', 'siswa'])->each(fn (string $role) => Role::findOrCreate($role, 'web'));
+    collect(['admin', 'peserta'])->each(fn (string $role) => Role::findOrCreate($role, 'web'));
 });
 
 test('an admin can log in through the admin form and reach the admin dashboard', function () {
@@ -24,24 +24,24 @@ test('an admin can log in through the admin form and reach the admin dashboard',
 });
 
 test('a student can log in through the student form and reach the cbt dashboard', function () {
-    $siswa = User::factory()->create(['username' => 'siswa1']);
-    $siswa->assignRole('siswa');
+    $peserta = User::factory()->create(['username' => 'peserta1']);
+    $peserta->assignRole('peserta');
 
     $response = $this->post(route('login'), [
-        'username' => 'siswa1',
+        'username' => 'peserta1',
         'password' => 'password',
     ]);
 
     $response->assertRedirect(route('cbt.dashboard'));
-    $this->assertAuthenticatedAs($siswa);
+    $this->assertAuthenticatedAs($peserta);
 });
 
 test('a student cannot log in through the admin form', function () {
-    $siswa = User::factory()->create(['username' => 'siswa2']);
-    $siswa->assignRole('siswa');
+    $peserta = User::factory()->create(['username' => 'peserta2']);
+    $peserta->assignRole('peserta');
 
     $response = $this->post(route('admin.login'), [
-        'username' => 'siswa2',
+        'username' => 'peserta2',
         'password' => 'password',
     ]);
 
@@ -63,7 +63,7 @@ test('an admin cannot log in through the student form', function () {
 });
 
 test('wrong credentials are rejected', function () {
-    User::factory()->create(['username' => 'someone'])->assignRole('siswa');
+    User::factory()->create(['username' => 'someone'])->assignRole('peserta');
 
     $response = $this->post(route('login'), [
         'username' => 'someone',

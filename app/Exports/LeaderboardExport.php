@@ -36,20 +36,20 @@ class LeaderboardExport implements FromCollection, WithHeadings, WithMapping
     /**
      * @return array<int, string|int|null>
      */
-    public function map($siswaUjian): array
+    public function map($pesertaUjian): array
     {
         $this->peringkat++;
 
-        $durasi = $siswaUjian->durasiPengerjaan();
+        $durasi = $pesertaUjian->durasiPengerjaan();
 
         return [
             $this->peringkat,
-            $siswaUjian->siswa->noreg,
-            $siswaUjian->siswa->nama,
-            $siswaUjian->siswa->asal_sekolah,
-            $siswaUjian->benar,
-            $siswaUjian->salah,
-            $siswaUjian->nilai,
+            $pesertaUjian->peserta->noreg,
+            $pesertaUjian->peserta->nama,
+            $pesertaUjian->peserta->asal_sekolah,
+            $pesertaUjian->benar,
+            $pesertaUjian->salah,
+            $pesertaUjian->nilai,
             $durasi !== null ? gmdate('H:i:s', $durasi) : '-',
         ];
     }

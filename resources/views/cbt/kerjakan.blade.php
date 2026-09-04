@@ -1,10 +1,10 @@
-<x-layouts.cbt :title="$siswaUjian->ujian->nama">
+<x-layouts.cbt :title="$pesertaUjian->ujian->nama">
     <div
         x-data="ujianApp({
             soal: @js($soal),
             deadline: {{ $batasWaktu->timestamp * 1000 }},
-            jawabUrl: '{{ route('cbt.ujian.jawab', $siswaUjian) }}',
-            submitUrl: '{{ route('cbt.ujian.submit', $siswaUjian) }}',
+            jawabUrl: '{{ route('cbt.ujian.jawab', $pesertaUjian) }}',
+            submitUrl: '{{ route('cbt.ujian.submit', $pesertaUjian) }}',
         })"
         x-init="init()"
         class="mx-auto max-w-5xl"
@@ -12,8 +12,8 @@
         {{-- Exam name + live countdown + submit button --}}
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
             <div>
-                <p class="font-semibold text-gray-800 dark:text-white/90">{{ $siswaUjian->ujian->nama }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $siswaUjian->ujian->pelajaran->nama ?? '' }}</p>
+                <p class="font-semibold text-gray-800 dark:text-white/90">{{ $pesertaUjian->ujian->nama }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $pesertaUjian->ujian->pelajaran->nama ?? '' }}</p>
             </div>
 
             <div class="flex items-center gap-4">

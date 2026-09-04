@@ -2,15 +2,15 @@
 
 namespace Database\Factories;
 
-use App\Models\Siswa;
-use App\Models\SiswaUjian;
+use App\Models\Peserta;
+use App\Models\PesertaUjian;
 use App\Models\Ujian;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<SiswaUjian>
+ * @extends Factory<PesertaUjian>
  */
-class SiswaUjianFactory extends Factory
+class PesertaUjianFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -20,7 +20,7 @@ class SiswaUjianFactory extends Factory
     public function definition(): array
     {
         return [
-            'siswa_id' => Siswa::factory(),
+            'peserta_id' => Peserta::factory(),
             'ujian_id' => Ujian::factory(),
             'waktu_mulai' => null,
             'waktu_selesai' => null,

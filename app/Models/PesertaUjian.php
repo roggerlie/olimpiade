@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Database\Factories\SiswaUjianFactory;
+use Database\Factories\PesertaUjianFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
-#[Table(name: 'siswa_ujian')]
-#[Fillable(['siswa_id', 'ujian_id', 'waktu_mulai', 'waktu_selesai', 'benar', 'salah', 'nilai'])]
-class SiswaUjian extends Model
+#[Table(name: 'peserta_ujian')]
+#[Fillable(['peserta_id', 'ujian_id', 'waktu_mulai', 'waktu_selesai', 'benar', 'salah', 'nilai'])]
+class PesertaUjian extends Model
 {
-    /** @use HasFactory<SiswaUjianFactory> */
+    /** @use HasFactory<PesertaUjianFactory> */
     use HasFactory;
 
     protected function casts(): array
@@ -27,9 +27,9 @@ class SiswaUjian extends Model
         ];
     }
 
-    public function siswa(): BelongsTo
+    public function peserta(): BelongsTo
     {
-        return $this->belongsTo(Siswa::class);
+        return $this->belongsTo(Peserta::class);
     }
 
     public function ujian(): BelongsTo
@@ -37,9 +37,9 @@ class SiswaUjian extends Model
         return $this->belongsTo(Ujian::class);
     }
 
-    public function siswaSoal(): HasMany
+    public function pesertaSoal(): HasMany
     {
-        return $this->hasMany(SiswaSoal::class);
+        return $this->hasMany(PesertaSoal::class);
     }
 
     /**

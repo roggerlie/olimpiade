@@ -3,15 +3,15 @@
 namespace Database\Factories;
 
 use App\Models\Jenjang;
-use App\Models\Siswa;
+use App\Models\Peserta;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Spatie\Permission\Models\Role;
 
 /**
- * @extends Factory<Siswa>
+ * @extends Factory<Peserta>
  */
-class SiswaFactory extends Factory
+class PesertaFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -24,7 +24,7 @@ class SiswaFactory extends Factory
 
         return [
             // Kept in sync with the paired User's username, mirroring the
-            // real invariant enforced by Admin\Siswa\Manager / SiswaImport:
+            // real invariant enforced by Admin\Peserta\Manager / PesertaImport:
             // a peserta logs in with their noreg.
             'user_id' => User::factory()->state(['username' => $noreg]),
             'jenjang_id' => Jenjang::factory(),
@@ -36,14 +36,14 @@ class SiswaFactory extends Factory
 
     public function configure(): static
     {
-        return $this->afterCreating(function (Siswa $siswa) {
+        return $this->afterCreating(function (Peserta $peserta) {
             // Runs after both rows exist, so this sees the final `noreg`
             // even when a test overrides it via ->create(['noreg' => ...]) —
             // the sync in definition() alone only covers the unoverridden case.
-            $siswa->user->forceFill(['username' => $siswa->noreg])->save();
+            $peserta->user->forceFill(['username' => $peserta->noreg])->save();
 
-            Role::findOrCreate('siswa', 'web');
-            $siswa->user->assignRole('siswa');
+            Role::findOrCreate('peserta', 'web');
+            $peserta->user->assignRole('peserta');
         });
     }
 }

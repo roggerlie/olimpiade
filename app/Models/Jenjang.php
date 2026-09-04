@@ -26,8 +26,8 @@ class Jenjang extends Model
         return $this->hasMany(Ujian::class);
     }
 
-    public function siswa(): HasMany
+    public function peserta(): HasMany
     {
-        return $this->hasMany(Siswa::class);
+        return $this->hasMany(Peserta::class);
     }
 }

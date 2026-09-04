@@ -1,10 +1,10 @@
 <?php
 
 use App\Exports\LeaderboardExport;
-use App\Exports\SiswaImportTemplateExport;
-use App\Exports\SiswaUjianExport;
+use App\Exports\PesertaImportTemplateExport;
+use App\Exports\PesertaUjianExport;
 use App\Models\BankSoal;
-use App\Models\Siswa;
+use App\Models\Peserta;
 use App\Models\Ujian;
 use App\Services\LeaderboardService;
 use Illuminate\Support\Facades\Route;
@@ -26,7 +26,7 @@ Route::get('ujian/{ujian}/peserta', function (Ujian $ujian) {
     return view('admin.ujian.peserta', ['ujian' => $ujian]);
 })->name('ujian.peserta');
 Route::get('ujian/{ujian}/peserta/export', function (Ujian $ujian) {
-    return Excel::download(new SiswaUjianExport($ujian->id), "Nilai-{$ujian->nama}.xlsx");
+    return Excel::download(new PesertaUjianExport($ujian->id), "Nilai-{$ujian->nama}.xlsx");
 })->name('ujian.peserta.export');
 
 Route::get('ujian/{ujian}/leaderboard', function (Ujian $ujian, LeaderboardService $leaderboard) {
@@ -43,18 +43,18 @@ Route::get('ujian/{ujian}/leaderboard/export', function (Ujian $ujian) {
 
 Route::view('peserta', 'admin.peserta.index')->name('peserta.index');
 Route::get('peserta/template', function () {
-    return Excel::download(new SiswaImportTemplateExport, 'template-peserta.xlsx');
+    return Excel::download(new PesertaImportTemplateExport, 'template-peserta.xlsx');
 })->name('peserta.template');
 
 Route::view('kartu-peserta', 'admin.kartu-peserta.index')->name('kartu-peserta.index');
 Route::get('kartu-peserta/cetak', function () {
     $jenjangId = request('jenjang');
 
-    $siswa = Siswa::query()
+    $peserta = Peserta::query()
         ->with('jenjang')
         ->when($jenjangId, fn ($query) => $query->where('jenjang_id', $jenjangId))
         ->orderBy('nama')
         ->get();
 
-    return view('admin.kartu-peserta.cetak', ['siswa' => $siswa]);
+    return view('admin.kartu-peserta.cetak', ['peserta' => $peserta]);
 })->name('kartu-peserta.cetak');

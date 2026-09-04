@@ -1,6 +1,6 @@
 <?php
 
-use App\Imports\SiswaImport;
+use App\Imports\PesertaImport;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -38,7 +38,7 @@ new class extends Component
             'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120'],
         ]);
 
-        $importer = new SiswaImport;
+        $importer = new PesertaImport;
         Excel::import($importer, $this->file->getRealPath());
 
         $this->imported = $importer->imported;
@@ -46,7 +46,7 @@ new class extends Component
         $this->file = null;
 
         if ($importer->imported > 0) {
-            $this->dispatch('siswa-imported')->to('admin.siswa.manager');
+            $this->dispatch('peserta-imported')->to('admin.peserta.manager');
         }
     }
 };

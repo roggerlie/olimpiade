@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\BankSoal;
-use App\Models\SiswaUjian;
+use App\Models\PesertaUjian;
 use App\Models\Soal;
 use App\Models\Ujian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -113,10 +113,10 @@ test('it deletes an unused ujian', function () {
     expect(Ujian::find($ujian->id))->toBeNull();
 });
 
-test('it refuses to delete an ujian already registered by a siswa ujian', function () {
+test('it refuses to delete an ujian already registered by a peserta ujian', function () {
     actingAsAdmin();
     $ujian = Ujian::factory()->create();
-    SiswaUjian::factory()->create(['ujian_id' => $ujian->id]);
+    PesertaUjian::factory()->create(['ujian_id' => $ujian->id]);
 
     Livewire::test('admin.ujian.manager')
         ->call('delete', $ujian->id)

@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\SiswaUjian;
+use App\Models\PesertaUjian;
 use App\Services\ScoringService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -22,7 +22,7 @@ class AutoSubmitExpiredExams extends Command
     {
         $total = 0;
 
-        SiswaUjian::query()
+        PesertaUjian::query()
             ->whereNotNull('waktu_mulai')
             ->whereNull('waktu_selesai')
             ->with('ujian')

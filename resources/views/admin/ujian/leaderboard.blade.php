@@ -25,7 +25,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                    @forelse ($ranking as $i => $siswaUjian)
+                    @forelse ($ranking as $i => $pesertaUjian)
                         @php $peringkat = $i + 1; @endphp
                         <tr>
                             <td class="px-5 py-3 text-sm">
@@ -35,12 +35,12 @@
                                     <span class="text-gray-600 dark:text-gray-300">#{{ $peringkat }}</span>
                                 @endif
                             </td>
-                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $siswaUjian->siswa->noreg }}</td>
-                            <td class="px-5 py-3 text-sm font-medium text-gray-800 dark:text-white/90">{{ $siswaUjian->siswa->nama }}</td>
-                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $siswaUjian->siswa->asal_sekolah }}</td>
-                            <td class="px-5 py-3 text-sm font-semibold text-gray-800 dark:text-white/90">{{ $siswaUjian->nilai }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $pesertaUjian->peserta->noreg }}</td>
+                            <td class="px-5 py-3 text-sm font-medium text-gray-800 dark:text-white/90">{{ $pesertaUjian->peserta->nama }}</td>
+                            <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $pesertaUjian->peserta->asal_sekolah }}</td>
+                            <td class="px-5 py-3 text-sm font-semibold text-gray-800 dark:text-white/90">{{ $pesertaUjian->nilai }}</td>
                             <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">
-                                {{ gmdate('H:i:s', $siswaUjian->durasiPengerjaan()) }}
+                                {{ gmdate('H:i:s', $pesertaUjian->durasiPengerjaan()) }}
                             </td>
                         </tr>
                     @empty

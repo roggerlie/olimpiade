@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->prefix('admin')
                 ->name('admin.')
                 ->group(__DIR__.'/../routes/admin.php');
-            Route::middleware(['web', 'auth', 'role:siswa'])
+            Route::middleware(['web', 'auth', 'role:peserta'])
                 ->name('cbt.')
                 ->group(__DIR__.'/../routes/cbt.php');
         },

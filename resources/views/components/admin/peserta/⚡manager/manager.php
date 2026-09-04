@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Jenjang;
-use App\Models\Siswa;
+use App\Models\Peserta;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -51,9 +51,9 @@ new class extends Component
     }
 
     #[Computed]
-    public function siswa(): LengthAwarePaginator
+    public function peserta(): LengthAwarePaginator
     {
-        return Siswa::query()
+        return Peserta::query()
             ->with('jenjang')
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
@@ -72,10 +72,10 @@ new class extends Component
         return Jenjang::query()->orderBy('nama')->get();
     }
 
-    #[On('siswa-imported')]
+    #[On('peserta-imported')]
     public function refreshList(): void
     {
-        unset($this->siswa);
+        unset($this->peserta);
     }
 
     public function create(): void
@@ -86,21 +86,21 @@ new class extends Component
 
     public function edit(int $id): void
     {
-        $siswa = Siswa::findOrFail($id);
+        $peserta = Peserta::findOrFail($id);
 
-        $this->editingId = $siswa->id;
-        $this->noreg = $siswa->noreg;
-        $this->nama = $siswa->nama;
-        $this->jenjangId = $siswa->jenjang_id;
-        $this->asalSekolah = $siswa->asal_sekolah;
+        $this->editingId = $peserta->id;
+        $this->noreg = $peserta->noreg;
+        $this->nama = $peserta->nama;
+        $this->jenjangId = $peserta->jenjang_id;
+        $this->asalSekolah = $peserta->asal_sekolah;
         $this->password = '';
         $this->showModal = true;
     }
 
     public function save(): void
     {
-        $usernameUnique = Rule::unique('users', 'username')->ignore($this->editingId ? Siswa::find($this->editingId)?->user_id : null);
-        $noregUnique = Rule::unique('siswa', 'noreg')->ignore($this->editingId);
+        $usernameUnique = Rule::unique('users', 'username')->ignore($this->editingId ? Peserta::find($this->editingId)?->user_id : null);
+        $noregUnique = Rule::unique('peserta', 'noreg')->ignore($this->editingId);
 
         $data = Validator::make(
             [
@@ -120,17 +120,17 @@ new class extends Component
         )->validate();
 
         if ($this->editingId) {
-            $siswa = Siswa::findOrFail($this->editingId);
+            $peserta = Peserta::findOrFail($this->editingId);
 
-            DB::transaction(function () use ($siswa, $data): void {
-                $siswa->update([
+            DB::transaction(function () use ($peserta, $data): void {
+                $peserta->update([
                     'jenjang_id' => $data['jenjangId'],
                     'noreg' => $data['noreg'],
                     'nama' => $data['nama'],
                     'asal_sekolah' => $data['asalSekolah'],
                 ]);
 
-                $siswa->user->update(array_filter([
+                $peserta->user->update(array_filter([
                     'username' => $data['noreg'],
                     'name' => $data['nama'],
                     'password' => $data['password'] ? Hash::make($data['password']) : null,
@@ -145,9 +145,9 @@ new class extends Component
                     'name' => $data['nama'],
                     'password' => Hash::make($data['password']),
                 ]);
-                $user->assignRole('siswa');
+                $user->assignRole('peserta');
 
-                Siswa::create([
+                Peserta::create([
                     'user_id' => $user->id,
                     'jenjang_id' => $data['jenjangId'],
                     'noreg' => $data['noreg'],
@@ -161,19 +161,19 @@ new class extends Component
 
         $this->errorMessage = null;
         $this->closeModal();
-        unset($this->siswa);
+        unset($this->peserta);
     }
 
     public function delete(int $id): void
     {
-        $siswa = Siswa::findOrFail($id);
-        // Deleting the parent User cascades to siswa, siswa_ujian and
-        // siswa_soal (see database/migrations) — one call, no orphaned login.
-        $siswa->user->delete();
+        $peserta = Peserta::findOrFail($id);
+        // Deleting the parent User cascades to peserta, peserta_ujian and
+        // peserta_soal (see database/migrations) — one call, no orphaned login.
+        $peserta->user->delete();
 
         $this->statusMessage = 'Peserta dihapus.';
         $this->errorMessage = null;
-        unset($this->siswa);
+        unset($this->peserta);
     }
 
     public function closeModal(): void

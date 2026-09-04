@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Cbt;
 
 use App\Http\Controllers\Controller;
-use App\Models\SiswaSoal;
-use App\Models\SiswaUjian;
+use App\Models\PesertaSoal;
+use App\Models\PesertaUjian;
 use App\Services\ScoringService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,15 +18,15 @@ use Illuminate\Support\Facades\Gate;
  */
 class AnswerController extends Controller
 {
-    public function simpan(Request $request, SiswaUjian $siswaUjian): JsonResponse
+    public function simpan(Request $request, PesertaUjian $pesertaUjian): JsonResponse
     {
-        Gate::authorize('view', $siswaUjian);
+        Gate::authorize('view', $pesertaUjian);
 
-        if ($siswaUjian->sudahSubmit()) {
+        if ($pesertaUjian->sudahSubmit()) {
             return response()->json(['message' => 'Ujian sudah dikumpulkan.'], 422);
         }
 
-        if ($siswaUjian->waktuHabis()) {
+        if ($pesertaUjian->waktuHabis()) {
             return response()->json(['message' => 'Waktu ujian sudah habis.'], 422);
         }
 
@@ -35,24 +35,24 @@ class AnswerController extends Controller
             'jawaban' => ['nullable', 'in:A,B,C,D,E'],
         ]);
 
-        $siswaSoal = SiswaSoal::query()
-            ->where('siswa_ujian_id', $siswaUjian->id)
+        $pesertaSoal = PesertaSoal::query()
+            ->where('peserta_ujian_id', $pesertaUjian->id)
             ->where('soal_id', $data['soal_id'])
             ->firstOrFail();
 
-        $siswaSoal->update(['jawaban' => $data['jawaban']]);
+        $pesertaSoal->update(['jawaban' => $data['jawaban']]);
 
         return response()->json(['tersimpan' => true]);
     }
 
-    public function submit(SiswaUjian $siswaUjian, ScoringService $scoring): JsonResponse
+    public function submit(PesertaUjian $pesertaUjian, ScoringService $scoring): JsonResponse
     {
-        Gate::authorize('view', $siswaUjian);
+        Gate::authorize('view', $pesertaUjian);
 
-        if (! $siswaUjian->sudahSubmit()) {
-            $scoring->submit($siswaUjian);
+        if (! $pesertaUjian->sudahSubmit()) {
+            $scoring->submit($pesertaUjian);
         }
 
-        return response()->json(['redirect' => route('cbt.ujian.hasil', $siswaUjian)]);
+        return response()->json(['redirect' => route('cbt.ujian.hasil', $pesertaUjian)]);
     }
 }

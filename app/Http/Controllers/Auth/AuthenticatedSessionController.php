@@ -15,9 +15,9 @@ class AuthenticatedSessionController extends Controller
     /**
      * Show the student login form.
      */
-    public function createSiswa(): View
+    public function createPeserta(): View
     {
-        return view('auth.login-siswa');
+        return view('auth.login-peserta');
     }
 
     /**
@@ -31,9 +31,9 @@ class AuthenticatedSessionController extends Controller
     /**
      * Authenticate a student and redirect to the CBT dashboard.
      */
-    public function storeSiswa(LoginRequest $request): RedirectResponse
+    public function storePeserta(LoginRequest $request): RedirectResponse
     {
-        $this->authenticate($request, 'siswa');
+        $this->authenticate($request, 'peserta');
 
         return redirect()->intended(route('cbt.dashboard'));
     }

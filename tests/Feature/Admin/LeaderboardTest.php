@@ -1,7 +1,7 @@
 <?php
 
 use App\Exports\LeaderboardExport;
-use App\Models\SiswaUjian;
+use App\Models\PesertaUjian;
 use App\Models\Ujian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Maatwebsite\Excel\Facades\Excel;
@@ -11,14 +11,14 @@ uses(RefreshDatabase::class);
 test('the leaderboard page lists participants ranked by nilai desc', function () {
     actingAsAdmin();
     $ujian = Ujian::factory()->create(['nama' => 'Ujian Matematika']);
-    $tinggi = SiswaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 81]);
-    $rendah = SiswaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 18]);
+    $tinggi = PesertaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 81]);
+    $rendah = PesertaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 18]);
 
     $response = $this->get(route('admin.ujian.leaderboard', $ujian))->assertOk();
 
     $content = $response->getContent();
-    $posTinggi = strpos($content, $tinggi->siswa->nama);
-    $posRendah = strpos($content, $rendah->siswa->nama);
+    $posTinggi = strpos($content, $tinggi->peserta->nama);
+    $posRendah = strpos($content, $rendah->peserta->nama);
 
     expect($posTinggi)->not->toBeFalse()
         ->and($posRendah)->not->toBeFalse()
@@ -37,9 +37,9 @@ test('the leaderboard page shows an empty state when nobody has finished', funct
 test('leaderboard export downloads the ranked results for the given ujian', function () {
     actingAsAdmin();
     $ujian = Ujian::factory()->create(['nama' => 'Ujian Matematika']);
-    $tinggi = SiswaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 81]);
-    SiswaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 18]);
-    SiswaUjian::factory()->selesai()->create(); // different ujian entirely
+    $tinggi = PesertaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 81]);
+    PesertaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 18]);
+    PesertaUjian::factory()->selesai()->create(); // different ujian entirely
 
     Excel::fake();
 

@@ -6,10 +6,10 @@ use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
 /**
- * The downloadable column template for App\Imports\SiswaImport — keep the
+ * The downloadable column template for App\Imports\PesertaImport — keep the
  * headings here in sync with the columns that import reads.
  */
-class SiswaImportTemplateExport implements FromArray, WithHeadings
+class PesertaImportTemplateExport implements FromArray, WithHeadings
 {
     public function headings(): array
     {

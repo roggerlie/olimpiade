@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\SiswaUjian;
+use App\Models\PesertaUjian;
 use App\Models\Ujian;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -16,12 +16,12 @@ class LeaderboardService
 {
     public function ranking(Ujian $ujian): Collection
     {
-        return SiswaUjian::query()
+        return PesertaUjian::query()
             ->where('ujian_id', $ujian->id)
             ->whereNotNull('waktu_selesai')
-            ->with('siswa')
+            ->with('peserta')
             ->get()
-            ->sort(function (SiswaUjian $a, SiswaUjian $b) {
+            ->sort(function (PesertaUjian $a, PesertaUjian $b) {
                 $nilaiA = (float) $a->nilai;
                 $nilaiB = (float) $b->nilai;
 

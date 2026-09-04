@@ -24,17 +24,17 @@
 
 <body class="bg-gray-100 p-6">
     <div class="no-print mb-6 flex items-center justify-between">
-        <p class="text-sm text-gray-600">{{ $siswa->count() }} kartu peserta siap dicetak.</p>
+        <p class="text-sm text-gray-600">{{ $peserta->count() }} kartu peserta siap dicetak.</p>
         <button onclick="window.print()" class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600">
             Cetak
         </button>
     </div>
 
-    @if ($siswa->isEmpty())
+    @if ($peserta->isEmpty())
         <p class="text-sm text-gray-500">Tidak ada peserta untuk dicetak.</p>
     @else
         <div class="grid grid-cols-2 gap-4">
-            @foreach ($siswa as $s)
+            @foreach ($peserta as $s)
                 <div class="kartu flex flex-col justify-between rounded-xl border-2 border-brand-500 bg-white p-4">
                     <div>
                         <p class="text-[10px] font-semibold uppercase tracking-wide text-brand-500">Kartu Peserta Olimpiade</p>

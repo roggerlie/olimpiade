@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\Siswa;
-use App\Models\SiswaSoal;
-use App\Models\SiswaUjian;
+use App\Models\Peserta;
+use App\Models\PesertaSoal;
+use App\Models\PesertaUjian;
 use App\Models\Ujian;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -39,9 +39,9 @@ new class extends Component
     }
 
     #[Computed]
-    public function siswa(): LengthAwarePaginator
+    public function peserta(): LengthAwarePaginator
     {
-        return Siswa::query()
+        return Peserta::query()
             ->where('jenjang_id', $this->ujian->jenjang_id)
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
@@ -49,7 +49,7 @@ new class extends Component
                         ->orWhere('noreg', 'like', "%{$this->search}%");
                 });
             })
-            ->with(['siswaUjian' => fn ($q) => $q->where('ujian_id', $this->ujianId)])
+            ->with(['pesertaUjian' => fn ($q) => $q->where('ujian_id', $this->ujianId)])
             ->orderBy('nama')
             ->paginate(15);
     }
@@ -57,54 +57,54 @@ new class extends Component
     #[Computed]
     public function totalPeserta(): int
     {
-        return Siswa::query()->where('jenjang_id', $this->ujian->jenjang_id)->count();
+        return Peserta::query()->where('jenjang_id', $this->ujian->jenjang_id)->count();
     }
 
     #[Computed]
     public function totalTerdaftar(): int
     {
-        return SiswaUjian::query()->where('ujian_id', $this->ujianId)->count();
+        return PesertaUjian::query()->where('ujian_id', $this->ujianId)->count();
     }
 
     public function daftarkanSemua(): void
     {
-        $siswaBelumTerdaftar = Siswa::query()
+        $pesertaBelumTerdaftar = Peserta::query()
             ->where('jenjang_id', $this->ujian->jenjang_id)
-            ->whereDoesntHave('siswaUjian', fn ($q) => $q->where('ujian_id', $this->ujianId))
+            ->whereDoesntHave('pesertaUjian', fn ($q) => $q->where('ujian_id', $this->ujianId))
             ->get(['id']);
 
-        DB::transaction(function () use ($siswaBelumTerdaftar): void {
-            foreach ($siswaBelumTerdaftar as $siswa) {
-                SiswaUjian::create([
-                    'siswa_id' => $siswa->id,
+        DB::transaction(function () use ($pesertaBelumTerdaftar): void {
+            foreach ($pesertaBelumTerdaftar as $peserta) {
+                PesertaUjian::create([
+                    'peserta_id' => $peserta->id,
                     'ujian_id' => $this->ujianId,
                 ]);
             }
         });
 
-        $this->statusMessage = "{$siswaBelumTerdaftar->count()} peserta baru didaftarkan.";
+        $this->statusMessage = "{$pesertaBelumTerdaftar->count()} peserta baru didaftarkan.";
         $this->errorMessage = null;
         $this->refreshLists();
     }
 
-    public function toggleDaftar(int $siswaId): void
+    public function toggleDaftar(int $pesertaId): void
     {
-        $siswaUjian = SiswaUjian::query()
-            ->where('siswa_id', $siswaId)
+        $pesertaUjian = PesertaUjian::query()
+            ->where('peserta_id', $pesertaId)
             ->where('ujian_id', $this->ujianId)
             ->first();
 
-        if ($siswaUjian) {
-            if ($siswaUjian->waktu_mulai) {
+        if ($pesertaUjian) {
+            if ($pesertaUjian->waktu_mulai) {
                 $this->errorMessage = 'Peserta ini sudah mulai mengerjakan ujian — gunakan tombol Reset untuk membatalkan progresnya dulu.';
 
                 return;
             }
 
-            $siswaUjian->delete();
+            $pesertaUjian->delete();
             $this->statusMessage = 'Pendaftaran peserta dibatalkan.';
         } else {
-            SiswaUjian::create(['siswa_id' => $siswaId, 'ujian_id' => $this->ujianId]);
+            PesertaUjian::create(['peserta_id' => $pesertaId, 'ujian_id' => $this->ujianId]);
             $this->statusMessage = 'Peserta didaftarkan.';
         }
 
@@ -119,18 +119,18 @@ new class extends Component
      * Named resetProgres, not reset — the latter collides with
      * Livewire\Component::reset(...$properties).
      */
-    public function resetProgres(int $siswaId): void
+    public function resetProgres(int $pesertaId): void
     {
-        $siswaUjian = SiswaUjian::query()
-            ->where('siswa_id', $siswaId)
+        $pesertaUjian = PesertaUjian::query()
+            ->where('peserta_id', $pesertaId)
             ->where('ujian_id', $this->ujianId)
             ->first();
 
-        if (! $siswaUjian) {
+        if (! $pesertaUjian) {
             return;
         }
 
-        $this->resetSatuAttempt($siswaUjian);
+        $this->resetSatuAttempt($pesertaUjian);
 
         $this->statusMessage = 'Progres peserta direset.';
         $this->errorMessage = null;
@@ -144,7 +144,7 @@ new class extends Component
      */
     public function resetSemua(): void
     {
-        $attempts = SiswaUjian::query()
+        $attempts = PesertaUjian::query()
             ->where('ujian_id', $this->ujianId)
             ->whereNotNull('waktu_mulai')
             ->get();
@@ -158,12 +158,12 @@ new class extends Component
         $this->refreshLists();
     }
 
-    private function resetSatuAttempt(SiswaUjian $siswaUjian): void
+    private function resetSatuAttempt(PesertaUjian $pesertaUjian): void
     {
-        DB::transaction(function () use ($siswaUjian): void {
-            SiswaSoal::query()->where('siswa_ujian_id', $siswaUjian->id)->delete();
+        DB::transaction(function () use ($pesertaUjian): void {
+            PesertaSoal::query()->where('peserta_ujian_id', $pesertaUjian->id)->delete();
 
-            $siswaUjian->update([
+            $pesertaUjian->update([
                 'waktu_mulai' => null,
                 'waktu_selesai' => null,
                 'benar' => null,
@@ -175,6 +175,6 @@ new class extends Component
 
     private function refreshLists(): void
     {
-        unset($this->siswa, $this->totalTerdaftar);
+        unset($this->peserta, $this->totalTerdaftar);
     }
 };

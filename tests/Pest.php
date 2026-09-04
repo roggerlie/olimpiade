@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Siswa;
+use App\Models\Peserta;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -57,14 +57,14 @@ function something()
  * as that user. Used by Livewire component tests that require an
  * authenticated admin (e.g. tests/Feature/Admin/*).
  *
- * Also seeds the `siswa` role — admin-side flows that create peserta accounts
- * (Admin\Siswa\Manager, App\Imports\SiswaImport) assign it immediately, so it
+ * Also seeds the `peserta` role — admin-side flows that create peserta accounts
+ * (Admin\Peserta\Manager, App\Imports\PesertaImport) assign it immediately, so it
  * needs to exist even though this actor is the admin, not a student.
  */
 function actingAsAdmin(): User
 {
     Role::findOrCreate('admin', 'web');
-    Role::findOrCreate('siswa', 'web');
+    Role::findOrCreate('peserta', 'web');
 
     $admin = User::factory()->create();
     $admin->assignRole('admin');
@@ -74,14 +74,14 @@ function actingAsAdmin(): User
 }
 
 /**
- * Create a peserta (with its paired, `siswa`-role login account) and log the
+ * Create a peserta (with its paired, `peserta`-role login account) and log the
  * current test in as that user. Used by CBT feature tests
  * (tests/Feature/Cbt/*, tests/Feature/Services/*).
  */
-function actingAsSiswa(array $attributes = []): Siswa
+function actingAsPeserta(array $attributes = []): Peserta
 {
-    $siswa = Siswa::factory()->create($attributes);
-    test()->actingAs($siswa->user);
+    $peserta = Peserta::factory()->create($attributes);
+    test()->actingAs($peserta->user);
 
-    return $siswa;
+    return $peserta;
 }
