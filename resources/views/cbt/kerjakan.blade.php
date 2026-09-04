@@ -2,6 +2,7 @@
     <div
         x-data="ujianApp({
             soal: @js($soal),
+            mulai: {{ $pesertaUjian->waktu_mulai->timestamp * 1000 }},
             deadline: {{ $batasWaktu->timestamp * 1000 }},
             jawabUrl: '{{ route('cbt.ujian.jawab', $pesertaUjian) }}',
             submitUrl: '{{ route('cbt.ujian.submit', $pesertaUjian) }}',
@@ -10,22 +11,31 @@
         class="mx-auto max-w-5xl"
     >
         {{-- Exam name + live countdown + submit button --}}
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-            <div>
-                <p class="font-semibold text-gray-800 dark:text-white/90">{{ $pesertaUjian->ujian->nama }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $pesertaUjian->ujian->pelajaran->nama ?? '' }}</p>
-            </div>
-
-            <div class="flex items-center gap-4">
-                <div class="text-right">
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Sisa Waktu</p>
-                    <p class="font-mono text-lg font-bold" :class="remaining <= 300 ? 'text-error-500' : 'text-gray-800 dark:text-white/90'" x-text="formatWaktu()"></p>
+        <div class="mb-4 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <p class="font-semibold text-gray-800 dark:text-white/90">{{ $pesertaUjian->ujian->nama }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $pesertaUjian->ujian->pelajaran->nama ?? '' }}</p>
                 </div>
 
-                <button @click="submit()" :disabled="submitting"
-                    class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50">
-                    Kumpulkan
-                </button>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Sisa Waktu</p>
+                        <p class="font-mono text-lg font-bold" :class="remaining <= 300 ? 'text-error-500' : 'text-gray-800 dark:text-white/90'" x-text="formatWaktu()"></p>
+                    </div>
+
+                    <button @click="submit()" :disabled="submitting"
+                        class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50">
+                        Kumpulkan
+                    </button>
+                </div>
+            </div>
+
+            {{-- Visual time-remaining bar: drains left-to-right, turns red in the last 5 minutes. --}}
+            <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
+                <div class="h-full rounded-full transition-all duration-1000 ease-linear"
+                    :class="remaining <= 300 ? 'bg-error-500' : 'bg-brand-500'"
+                    :style="`width: ${progressPercent()}%`"></div>
             </div>
         </div>
 
@@ -96,9 +106,10 @@
 
     @push('scripts')
         <script>
-            function ujianApp({ soal, deadline, jawabUrl, submitUrl }) {
+            function ujianApp({ soal, mulai, deadline, jawabUrl, submitUrl }) {
                 return {
                     soal,
+                    mulai,
                     deadline,
                     jawabUrl,
                     submitUrl,
@@ -126,6 +137,17 @@
                         const m = Math.floor((this.remaining % 3600) / 60).toString().padStart(2, '0');
                         const s = Math.floor(this.remaining % 60).toString().padStart(2, '0');
                         return `${h}:${m}:${s}`;
+                    },
+
+                    // Percentage of the attempt's total allotted time already
+                    // elapsed (0 at start, 100 at the deadline) — drives the
+                    // visual time bar. Based on `mulai`, not page-load time,
+                    // so a refresh mid-exam doesn't reset the bar.
+                    progressPercent() {
+                        const total = this.deadline - this.mulai;
+                        if (total <= 0) return 100;
+                        const elapsed = Date.now() - this.mulai;
+                        return Math.min(100, Math.max(0, (elapsed / total) * 100));
                     },
 
                     currentSoal() {
