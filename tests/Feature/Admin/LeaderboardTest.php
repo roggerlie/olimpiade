@@ -16,9 +16,12 @@ test('the leaderboard page lists participants ranked by nilai desc', function ()
 
     $response = $this->get(route('admin.ujian.leaderboard', $ujian))->assertOk();
 
+    // e() to match Blade's HTML-escaped output — a Faker-generated nama with
+    // an apostrophe (e.g. "O'Connor") renders as "O&#039;Connor", so a raw
+    // strpos() intermittently missed it and flaked this test.
     $content = $response->getContent();
-    $posTinggi = strpos($content, $tinggi->peserta->nama);
-    $posRendah = strpos($content, $rendah->peserta->nama);
+    $posTinggi = strpos($content, e($tinggi->peserta->nama));
+    $posRendah = strpos($content, e($rendah->peserta->nama));
 
     expect($posTinggi)->not->toBeFalse()
         ->and($posRendah)->not->toBeFalse()
