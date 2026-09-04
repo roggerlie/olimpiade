@@ -8,6 +8,7 @@
     },
     "dependencies": {
         "alpinejs": "^3.14.9",
+        "apexcharts": "^7.0.0",
         "axios": "^1.7.9"
     },
     "devDependencies": {

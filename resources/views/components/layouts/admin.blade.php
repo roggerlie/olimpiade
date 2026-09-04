@@ -11,11 +11,13 @@
     <title>{{ $title }} | Admin Olimpiade</title>
 
     {{--
-        No resources/js/app.js here on purpose — Livewire bundles its own
-        Alpine instance via @livewireScripts below. Loading app.js too would
-        start a second, conflicting Alpine instance. See resources/js/app.js.
+        resources/js/admin.js on purpose, not app.js — Livewire bundles its
+        own Alpine instance via @livewireScripts below, and app.js imports
+        Alpine too, so loading it here would start a second, conflicting
+        instance. admin.js only exposes window.ApexCharts for the dashboard
+        chart's inline script — see resources/js/admin.js.
     --}}
-    @vite(['resources/css/app.css'])
+    @vite(['resources/css/app.css', 'resources/js/admin.js'])
     @include('partials.theme-scripts')
     @livewireStyles
 </head>
