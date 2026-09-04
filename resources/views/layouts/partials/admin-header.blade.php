@@ -1,13 +1,24 @@
 {{--
     Trimmed port of tailadmin/resources/views/layouts/app-header.blade.php —
-    including its mobile "application menu" pattern: theme toggle + user
-    dropdown collapse behind a dots-icon toggle below the xl breakpoint,
-    same as the original, instead of always being visible.
+    including its mobile "application menu" pattern (theme toggle + user
+    dropdown collapse into a second row behind a dots-icon toggle below the
+    xl breakpoint) and its exact 3-level nesting:
+      <header> (flex row, trivial — one child)
+        └ wrapper (flex-col on mobile so the two rows stack; xl:flex-row so
+                    they sit side by side on desktop)
+            ├ row 1: sidebar/mobile toggles, mobile logo, app-menu toggle,
+            │        search — direct siblings so `justify-between` spreads
+            │        them evenly on mobile
+            └ row 2 (collapsible): theme toggle + user dropdown
+    Flattening this into fewer levels breaks the mobile spread and makes
+    the collapsible row sit inline instead of dropping below row 1 — both
+    confirmed by inspecting the actually-rendered DOM, not just the source.
 --}}
-<header class="sticky top-0 z-99999 flex w-full flex-col border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 xl:border-b"
+<header class="sticky top-0 z-99999 flex w-full border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 xl:border-b"
     x-data="{ isApplicationMenuOpen: false }">
-    <div class="flex w-full items-center justify-between gap-2 border-b border-gray-200 px-3 py-3 dark:border-gray-800 sm:gap-4 xl:justify-normal xl:border-b-0 xl:px-6 xl:py-4">
-        <div class="flex items-center gap-2">
+    <div class="flex grow flex-col items-center justify-between xl:flex-row xl:px-6">
+        {{-- Row 1: toggles, mobile logo, app-menu toggle, search --}}
+        <div class="flex w-full items-center justify-between gap-2 border-b border-gray-200 px-3 py-3 dark:border-gray-800 sm:gap-4 xl:justify-normal xl:border-b-0 xl:px-0 xl:py-4">
             {{-- Desktop sidebar toggle --}}
             <button
                 class="hidden h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-500 dark:border-gray-800 dark:text-gray-400 xl:flex"
@@ -31,9 +42,9 @@
                 <img src="/images/logo/logo-icon.svg" alt="CBT Olimpiade" width="28" height="28" />
             </a>
 
-            {{-- Mobile application-menu toggle (reveals theme + user dropdown below) --}}
+            {{-- Mobile application-menu toggle (reveals row 2 below) --}}
             <button @click="isApplicationMenuOpen = !isApplicationMenuOpen"
-                class="z-99999 ml-auto flex h-10 w-10 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 xl:hidden"
+                class="z-99999 flex h-10 w-10 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 xl:hidden"
                 aria-label="Toggle application menu">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M5.99902 10.4951C6.82745 10.4951 7.49902 11.1667 7.49902 11.9951V12.0051C7.49902 12.8335 6.82745 13.5051 5.99902 13.5051C5.1706 13.5051 4.49902 12.8335 4.49902 12.0051V11.9951C4.49902 11.1667 5.1706 10.4951 5.99902 10.4951ZM17.999 10.4951C18.8275 10.4951 19.499 11.1667 19.499 11.9951V12.0051C19.499 12.8335 18.8275 13.5051 17.999 13.5051C17.1706 13.5051 16.499 12.8335 16.499 12.0051V11.9951C16.499 11.1667 17.1706 10.4951 17.999 10.4951ZM13.499 11.9951C13.499 11.1667 12.8275 10.4951 11.999 10.4951C11.1706 10.4951 10.499 11.1667 10.499 11.9951V12.0051C10.499 12.8335 11.1706 13.5051 11.999 13.5051C12.8275 13.5051 13.499 12.8335 13.499 12.0051V11.9951Z" fill="currentColor" />
@@ -44,10 +55,9 @@
             <livewire:admin.search-bar />
         </div>
 
-        {{-- Theme toggle + user dropdown: always visible on desktop, collapse
-        behind the dots toggle above on mobile — matches tailadmin exactly. --}}
+        {{-- Row 2 (collapsible on mobile): theme toggle + user dropdown --}}
         <div :class="isApplicationMenuOpen ? 'flex' : 'hidden'"
-            class="w-full items-center justify-between gap-4 px-5 py-4 shadow-theme-md xl:flex xl:w-auto xl:justify-end xl:px-0 xl:py-0 xl:shadow-none">
+            class="w-full items-center justify-between gap-4 px-5 py-4 shadow-theme-md xl:flex xl:justify-end xl:px-0 xl:py-0 xl:shadow-none">
             <div class="flex items-center gap-3">
                 {{-- Theme toggle --}}
                 <button
