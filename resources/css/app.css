@@ -151,6 +151,14 @@
   body {
     @apply relative font-normal font-outfit z-1 bg-gray-50;
   }
+  /*
+    Hides x-cloak'd elements until Alpine initializes (modal, mobile sidebar
+    overlay, dropdown menus) — without this rule x-cloak is a no-op and
+    those elements flash open for a frame on every page load.
+  */
+  [x-cloak] {
+    display: none !important;
+  }
 }
 
 /* Admin sidebar menu item states (see resources/views/layouts/admin.blade.php) */

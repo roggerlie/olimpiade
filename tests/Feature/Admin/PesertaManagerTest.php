@@ -113,3 +113,15 @@ test('deleting a peserta also removes their login account', function () {
     expect(Peserta::find($peserta->id))->toBeNull()
         ->and(User::find($userId))->toBeNull();
 });
+
+test('the list paginates with the app-styled pagination view', function () {
+    actingAsAdmin();
+    Peserta::factory()->count(11)->create();
+
+    // 10 per page (see manager.php's ->paginate(10)), so an 11th row pushes
+    // a "page 2" link through resources/views/vendor/pagination/tailwind.blade.php
+    // (our styled override of Laravel's default pagination view).
+    Livewire::test('admin.peserta.manager')
+        ->assertSeeHtml('aria-current="page"')
+        ->assertSeeHtml('aria-label="Go to page 2"');
+});

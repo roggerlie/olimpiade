@@ -51,14 +51,21 @@
     });
 </script>
 
-{{-- Apply dark mode immediately, before first paint, to avoid a light-mode flash --}}
+{{--
+    Apply dark mode immediately, before first paint, to avoid a light-mode
+    flash. Only touches documentElement (<html>) — matches
+    tailadmin/resources/views/layouts/app.blade.php exactly. document.body
+    doesn't exist yet at this point (this script runs in <head>, before the
+    parser reaches <body>), so touching it here throws
+    "Cannot read properties of null" and aborts the whole inline script,
+    which is also what was hanging the preloader.
+--}}
 <script>
     (function () {
         const saved = localStorage.getItem('theme');
         const system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         if ((saved || system) === 'dark') {
             document.documentElement.classList.add('dark');
-            document.body.classList.add('dark');
         }
     })();
 </script>

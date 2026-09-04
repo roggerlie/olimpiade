@@ -35,24 +35,23 @@
             </button>
 
             {{-- User dropdown --}}
-            <div x-data="{ open: false }" class="relative">
-                <button @click="open = !open" class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500 text-white">
-                        {{ Str::upper(Str::substr(auth()->user()->name, 0, 1)) }}
-                    </span>
-                    <span class="hidden sm:block">{{ auth()->user()->name }}</span>
-                </button>
+            <x-common.dropdown-menu>
+                <x-slot name="button">
+                    <div class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <x-ui.avatar :name="auth()->user()->name" size="small" />
+                        <span class="hidden sm:block">{{ auth()->user()->name }}</span>
+                    </div>
+                </x-slot>
 
-                <div x-show="open" @click.outside="open = false" x-cloak x-transition
-                    class="absolute right-0 mt-2 w-48 rounded-lg border border-gray-200 bg-white p-2 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+                <x-slot name="content">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5">
+                        <button type="submit" class="flex w-full rounded-lg px-3 py-2 text-left font-medium text-theme-xs text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300">
                             Keluar
                         </button>
                     </form>
-                </div>
-            </div>
+                </x-slot>
+            </x-common.dropdown-menu>
         </div>
     </div>
 </header>
