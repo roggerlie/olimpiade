@@ -1,6 +1,7 @@
 <?php
 
 use App\Imports\PesertaImport;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -18,6 +19,16 @@ new class extends Component
 
     /** @var array<int, string> */
     public array $importErrors = [];
+
+    /**
+     * Drives the dropzone's "selected file" display. Server-tracked (not
+     * client Alpine state) so it correctly clears when open() resets $file.
+     */
+    #[Computed]
+    public function fileName(): ?string
+    {
+        return $this->file?->getClientOriginalName();
+    }
 
     #[On('open-import-modal')]
     public function open(): void

@@ -26,8 +26,9 @@
 
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">File (.xlsx, .xls, .csv)</label>
-                <input type="file" wire:model="file" accept=".xlsx,.xls,.csv"
-                    class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
+                <x-form.dropzone accept=".xlsx,.xls,.csv" :file-name="$this->fileName" wire:model="file">
+                    Maks. 5MB
+                </x-form.dropzone>
                 <div wire:loading wire:target="file" class="mt-1 text-xs text-gray-400">Mengunggah...</div>
                 @error('file') <p class="mt-1 text-sm text-error-500">{{ $message }}</p> @enderror
             </div>

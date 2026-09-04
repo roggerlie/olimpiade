@@ -46,3 +46,16 @@ test('it rejects a file with the wrong mime type', function () {
         ->call('import')
         ->assertHasErrors(['file' => 'mimes']);
 });
+
+test('the dropzone shows the selected filename, and it clears when the modal reopens', function () {
+    actingAsAdmin();
+
+    $component = Livewire::test('admin.peserta.import')
+        ->set('file', UploadedFile::fake()->create('data-peserta.xlsx', 10));
+
+    expect($component->instance()->fileName())->toBe('data-peserta.xlsx');
+
+    $component->dispatch('open-import-modal');
+
+    expect($component->instance()->fileName())->toBeNull();
+});
