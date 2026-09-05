@@ -61,22 +61,43 @@
 
                 @script
                     <script>
+                        // A count of people is never fractional, but ApexCharts' auto tick
+                        // algorithm doesn't know that — for a small max (e.g. 3) it can pick
+                        // a fractional step (0, 1, 2, 2, 3 rounds to duplicate labels once
+                        // Math.round() is applied). Force a whole-number, non-repeating step
+                        // by rounding the axis max up to a multiple of the tick count instead.
+                        const pesertaData = @json($this->pesertaPerJenjang->pluck('total'));
+                        const pesertaMax = Math.max(1, ...pesertaData);
+                        const pesertaTicks = Math.min(pesertaMax, 5);
+                        const pesertaAxisMax = Math.ceil(pesertaMax / pesertaTicks) * pesertaTicks;
+
                         new ApexCharts(document.querySelector('#chart-peserta-jenjang'), {
                             series: [{
                                 name: 'Peserta',
-                                data: @json($this->pesertaPerJenjang->pluck('total')),
+                                data: pesertaData,
                             }],
                             colors: ['#465fff'],
                             chart: {
                                 fontFamily: 'Outfit, sans-serif',
                                 type: 'bar',
-                                height: 180,
+                                // Taller than tailadmin's chart-1.js reference (180): that chart
+                                // packs 12 monthly bars into the width, ours only has 3-5 jenjang,
+                                // so the same height left it looking flat and under-filled.
+                                height: 230,
                                 toolbar: { show: false },
                             },
                             plotOptions: {
                                 bar: { horizontal: false, columnWidth: '39%', borderRadius: 5, borderRadiusApplication: 'end' },
                             },
-                            dataLabels: { enabled: false },
+                            // Peserta counts are whole people — showing the number on each bar
+                            // makes a 3-5-category chart scannable at a glance, unlike
+                            // tailadmin's 12-bar chart where labels would collide.
+                            dataLabels: {
+                                enabled: true,
+                                formatter: (val) => Math.round(val),
+                                offsetY: -20,
+                                style: { fontSize: '12px', fontFamily: 'Outfit, sans-serif', colors: ['#1D2939'] },
+                            },
                             stroke: { show: true, width: 4, colors: ['transparent'] },
                             xaxis: {
                                 categories: @json($this->pesertaPerJenjang->pluck('label')),
@@ -84,7 +105,13 @@
                                 axisTicks: { show: false },
                             },
                             legend: { show: true, position: 'top', horizontalAlign: 'left', fontFamily: 'Outfit', markers: { radius: 99 } },
-                            yaxis: { title: false },
+                            yaxis: {
+                                title: false,
+                                min: 0,
+                                max: pesertaAxisMax,
+                                tickAmount: pesertaTicks,
+                                labels: { formatter: (val) => Math.round(val) },
+                            },
                             grid: { yaxis: { lines: { show: true } } },
                             fill: { opacity: 1 },
                             tooltip: { x: { show: false }, y: { formatter: (val) => val + ' peserta' } },
@@ -111,13 +138,21 @@
                             chart: {
                                 fontFamily: 'Outfit, sans-serif',
                                 type: 'bar',
-                                height: 180,
+                                height: 230, // see the matching comment on the peserta-per-jenjang chart above
                                 toolbar: { show: false },
                             },
                             plotOptions: {
                                 bar: { horizontal: false, columnWidth: '39%', borderRadius: 5, borderRadiusApplication: 'end' },
                             },
-                            dataLabels: { enabled: false },
+                            // Unlike peserta counts, nilai is a real average (rounded to 1
+                            // decimal server-side) — .toFixed(1) here keeps the label matching
+                            // that precision instead of silently rounding it to a whole number.
+                            dataLabels: {
+                                enabled: true,
+                                formatter: (val) => val.toFixed(1),
+                                offsetY: -20,
+                                style: { fontSize: '12px', fontFamily: 'Outfit, sans-serif', colors: ['#1D2939'] },
+                            },
                             stroke: { show: true, width: 4, colors: ['transparent'] },
                             xaxis: {
                                 categories: @json($this->rataNilaiPerUjian->pluck('label')),
@@ -125,10 +160,13 @@
                                 axisTicks: { show: false },
                             },
                             legend: { show: true, position: 'top', horizontalAlign: 'left', fontFamily: 'Outfit', markers: { radius: 99 } },
-                            yaxis: { title: false },
+                            yaxis: {
+                                title: false,
+                                labels: { formatter: (val) => val.toFixed(1) },
+                            },
                             grid: { yaxis: { lines: { show: true } } },
                             fill: { opacity: 1 },
-                            tooltip: { x: { show: false } },
+                            tooltip: { x: { show: false }, y: { formatter: (val) => val.toFixed(1) } },
                         }).render();
                     </script>
                 @endscript
