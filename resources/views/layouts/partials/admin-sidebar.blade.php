@@ -24,6 +24,17 @@
     </div>
 
     <nav class="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+        {{-- Section title, matching tailadmin's menu-group header — a
+        static "Menu" label since this app only has the one flat group. --}}
+        <h2 class="mb-4 flex text-xs uppercase leading-5 text-gray-400"
+            :class="(!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen) ? 'xl:justify-center' : 'justify-start'">
+            <span x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen">Menu</span>
+            <svg x-show="!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen" x-cloak
+                width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 12C4.25 11.5858 4.58579 11.25 5 11.25H19C19.4142 11.25 19.75 11.5858 19.75 12C19.75 12.4142 19.4142 12.75 19 12.75H5C4.58579 12.75 4.25 12.4142 4.25 12Z" fill="currentColor"/>
+            </svg>
+        </h2>
+
         <ul class="flex flex-col gap-1">
             @foreach (\App\Support\AdminMenu::items() as $item)
                 @php $isActive = request()->routeIs($item['active'] ?? $item['route']); @endphp
