@@ -66,24 +66,28 @@
                                 name: 'Peserta',
                                 data: @json($this->pesertaPerJenjang->pluck('total')),
                             }],
+                            colors: ['#465fff'],
                             chart: {
                                 fontFamily: 'Outfit, sans-serif',
                                 type: 'bar',
-                                height: 220,
+                                height: 180,
                                 toolbar: { show: false },
                             },
-                            colors: ['#465fff'],
                             plotOptions: {
-                                bar: { borderRadius: 5, borderRadiusApplication: 'end', columnWidth: '45%' },
+                                bar: { horizontal: false, columnWidth: '39%', borderRadius: 5, borderRadiusApplication: 'end' },
                             },
                             dataLabels: { enabled: false },
+                            stroke: { show: true, width: 4, colors: ['transparent'] },
                             xaxis: {
                                 categories: @json($this->pesertaPerJenjang->pluck('label')),
                                 axisBorder: { show: false },
                                 axisTicks: { show: false },
                             },
+                            legend: { show: true, position: 'top', horizontalAlign: 'left', fontFamily: 'Outfit', markers: { radius: 99 } },
+                            yaxis: { title: false },
                             grid: { yaxis: { lines: { show: true } } },
-                            tooltip: { y: { formatter: (val) => val + ' peserta' } },
+                            fill: { opacity: 1 },
+                            tooltip: { x: { show: false }, y: { formatter: (val) => val + ' peserta' } },
                         }).render();
                     </script>
                 @endscript
@@ -103,23 +107,28 @@
                                 name: 'Rata-rata Nilai',
                                 data: @json($this->rataNilaiPerUjian->pluck('total')),
                             }],
+                            colors: ['#12b76a'],
                             chart: {
                                 fontFamily: 'Outfit, sans-serif',
                                 type: 'bar',
-                                height: 220,
+                                height: 180,
                                 toolbar: { show: false },
                             },
-                            colors: ['#12b76a'],
                             plotOptions: {
-                                bar: { borderRadius: 5, borderRadiusApplication: 'end', columnWidth: '45%' },
+                                bar: { horizontal: false, columnWidth: '39%', borderRadius: 5, borderRadiusApplication: 'end' },
                             },
                             dataLabels: { enabled: false },
+                            stroke: { show: true, width: 4, colors: ['transparent'] },
                             xaxis: {
                                 categories: @json($this->rataNilaiPerUjian->pluck('label')),
                                 axisBorder: { show: false },
                                 axisTicks: { show: false },
                             },
+                            legend: { show: true, position: 'top', horizontalAlign: 'left', fontFamily: 'Outfit', markers: { radius: 99 } },
+                            yaxis: { title: false },
                             grid: { yaxis: { lines: { show: true } } },
+                            fill: { opacity: 1 },
+                            tooltip: { x: { show: false } },
                         }).render();
                     </script>
                 @endscript
