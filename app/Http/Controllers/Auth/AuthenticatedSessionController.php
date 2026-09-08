@@ -33,26 +33,29 @@ class AuthenticatedSessionController extends Controller
      */
     public function storePeserta(LoginRequest $request): RedirectResponse
     {
-        $this->authenticate($request, 'peserta');
+        $this->authenticate($request, ['peserta']);
 
         return redirect()->intended(route('cbt.dashboard'));
     }
 
     /**
-     * Authenticate an admin and redirect to the admin dashboard.
+     * Authenticate an admin (any of the administrator/admin/operator tiers)
+     * and redirect to the admin dashboard.
      */
     public function storeAdmin(LoginRequest $request): RedirectResponse
     {
-        $this->authenticate($request, 'admin');
+        $this->authenticate($request, ['administrator', 'admin', 'operator']);
 
         return redirect()->intended(route('admin.dashboard'));
     }
 
     /**
-     * Attempt authentication and verify the user holds the expected role,
-     * so a student can't sign in through the admin form or vice versa.
+     * Attempt authentication and verify the user holds one of the expected
+     * roles, so a student can't sign in through the admin form or vice versa.
+     *
+     * @param  list<string>  $roles
      */
-    private function authenticate(LoginRequest $request, string $role): void
+    private function authenticate(LoginRequest $request, array $roles): void
     {
         $credentials = $request->only('username', 'password');
 
@@ -62,7 +65,7 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        if (! Auth::user()->hasRole($role)) {
+        if (! Auth::user()->hasAnyRole($roles)) {
             Auth::logout();
 
             throw ValidationException::withMessages([
@@ -78,7 +81,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        $wasAdmin = Auth::user()?->hasRole('admin');
+        $wasAdmin = Auth::user()?->hasAnyRole(['administrator', 'admin', 'operator']);
 
         Auth::logout();
 

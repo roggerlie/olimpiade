@@ -19,7 +19,7 @@ class JenjangFactory extends Factory
     {
         return [
             'kode' => fake()->unique()->lexify('??'),
-            'nama' => fake()->randomElement(['SD', 'SMP', 'SMA']),
+            'nama' => fake()->randomElement(['SD', 'SLTP', 'SLTA']),
         ];
     }
 }

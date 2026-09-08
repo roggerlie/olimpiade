@@ -7,7 +7,7 @@ use Spatie\Permission\Models\Role;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    collect(['admin', 'peserta'])->each(fn (string $role) => Role::findOrCreate($role, 'web'));
+    collect(['administrator', 'admin', 'operator', 'peserta'])->each(fn (string $role) => Role::findOrCreate($role, 'web'));
 });
 
 test('an admin can log in through the admin form and reach the admin dashboard', function () {
@@ -21,6 +21,32 @@ test('an admin can log in through the admin form and reach the admin dashboard',
 
     $response->assertRedirect(route('admin.dashboard'));
     $this->assertAuthenticatedAs($admin);
+});
+
+test('an administrator can log in through the admin form and reach the admin dashboard', function () {
+    $administrator = User::factory()->create(['username' => 'administrator1']);
+    $administrator->assignRole('administrator');
+
+    $response = $this->post(route('admin.login'), [
+        'username' => 'administrator1',
+        'password' => 'password',
+    ]);
+
+    $response->assertRedirect(route('admin.dashboard'));
+    $this->assertAuthenticatedAs($administrator);
+});
+
+test('an operator can log in through the admin form and reach the admin dashboard', function () {
+    $operator = User::factory()->create(['username' => 'operator1']);
+    $operator->assignRole('operator');
+
+    $response = $this->post(route('admin.login'), [
+        'username' => 'operator1',
+        'password' => 'password',
+    ]);
+
+    $response->assertRedirect(route('admin.dashboard'));
+    $this->assertAuthenticatedAs($operator);
 });
 
 test('a student can log in through the student form and reach the cbt dashboard', function () {

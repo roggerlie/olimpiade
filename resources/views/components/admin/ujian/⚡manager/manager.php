@@ -56,12 +56,16 @@ new class extends Component
 
     public function create(): void
     {
+        $this->authorize('ujian.manage');
+
         $this->resetForm();
         $this->showModal = true;
     }
 
     public function edit(int $id): void
     {
+        $this->authorize('ujian.manage');
+
         $ujian = Ujian::findOrFail($id);
 
         $this->editingId = $ujian->id;
@@ -76,6 +80,8 @@ new class extends Component
 
     public function save(): void
     {
+        $this->authorize('ujian.manage');
+
         $validator = Validator::make(
             [
                 'bankSoalId' => $this->bankSoalId,
@@ -137,6 +143,8 @@ new class extends Component
 
     public function delete(int $id): void
     {
+        $this->authorize('ujian.manage');
+
         try {
             Ujian::findOrFail($id)->delete();
             $this->statusMessage = 'Ujian dihapus.';

@@ -7,17 +7,10 @@ use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
-function baseSoalPayload(): array
-{
-    return [
-        'pertanyaan' => 'Berapa 2 + 2?',
-        'pilihA' => '3',
-        'pilihB' => '4',
-        'pilihC' => '5',
-        'pilihD' => '6',
-        'jawaban' => 'B',
-    ];
-}
+// Tambah/Ubah Soal moved off this component's own modal onto their own page
+// (see admin.soal.form / tests/Feature/Admin/SoalFormTest.php) — this file
+// now only covers what's actually left on admin.soal.manager: list, search,
+// and delete.
 
 test('it lists soal belonging to the given bank soal only', function () {
     actingAsAdmin();
@@ -31,106 +24,27 @@ test('it lists soal belonging to the given bank soal only', function () {
         ->assertDontSee('Soal bank lain');
 });
 
-test('it validates required fields before creating', function () {
+test('search filters soal by pertanyaan text within the same bank soal', function () {
     actingAsAdmin();
     $bankSoal = BankSoal::factory()->create();
+    Soal::factory()->create(['bank_soal_id' => $bankSoal->id, 'pertanyaan' => 'Berapa hasil dari 2 + 2?']);
+    Soal::factory()->create(['bank_soal_id' => $bankSoal->id, 'pertanyaan' => 'Ibu kota Indonesia adalah?']);
 
     Livewire::test('admin.soal.manager', ['bankSoalId' => $bankSoal->id])
-        ->call('create')
-        ->call('save')
-        ->assertHasErrors(['pertanyaan', 'pilihA', 'pilihB', 'pilihC', 'pilihD', 'jawaban']);
-
-    expect(Soal::count())->toBe(0);
+        ->set('search', 'ibu kota')
+        ->assertSee('Ibu kota Indonesia adalah?')
+        ->assertDontSee('Berapa hasil dari 2 + 2?');
 });
 
-test('it creates a new soal scoped to the bank soal', function () {
+test('totalSoal always reflects the bank soal\'s real count, unaffected by search', function () {
     actingAsAdmin();
     $bankSoal = BankSoal::factory()->create();
+    Soal::factory()->count(3)->create(['bank_soal_id' => $bankSoal->id]);
 
     Livewire::test('admin.soal.manager', ['bankSoalId' => $bankSoal->id])
-        ->call('create')
-        ->set(baseSoalPayload())
-        ->call('save')
-        ->assertHasNoErrors()
-        ->assertSet('showModal', false);
-
-    $soal = Soal::where('bank_soal_id', $bankSoal->id)->first();
-    expect($soal)->not->toBeNull()
-        ->and($soal->jawaban)->toBe('B');
-});
-
-test('it rejects jawaban E when pilihan E is empty', function () {
-    actingAsAdmin();
-    $bankSoal = BankSoal::factory()->create();
-
-    Livewire::test('admin.soal.manager', ['bankSoalId' => $bankSoal->id])
-        ->call('create')
-        ->set(array_merge(baseSoalPayload(), ['jawaban' => 'E']))
-        ->call('save')
-        ->assertHasErrors(['jawaban']);
-
-    expect(Soal::count())->toBe(0);
-});
-
-test('it accepts jawaban E when pilihan E is filled', function () {
-    actingAsAdmin();
-    $bankSoal = BankSoal::factory()->create();
-
-    Livewire::test('admin.soal.manager', ['bankSoalId' => $bankSoal->id])
-        ->call('create')
-        ->set(array_merge(baseSoalPayload(), ['pilihE' => '7', 'jawaban' => 'E']))
-        ->call('save')
-        ->assertHasNoErrors();
-
-    expect(Soal::where('bank_soal_id', $bankSoal->id)->where('jawaban', 'E')->exists())->toBeTrue();
-});
-
-test('it prefills and updates an existing soal', function () {
-    actingAsAdmin();
-    $bankSoal = BankSoal::factory()->create();
-    $soal = Soal::factory()->create(['bank_soal_id' => $bankSoal->id, 'pertanyaan' => 'Lama']);
-
-    Livewire::test('admin.soal.manager', ['bankSoalId' => $bankSoal->id])
-        ->call('edit', $soal->id)
-        ->assertSet('pertanyaan', 'Lama')
-        ->set('pertanyaan', 'Baru')
-        ->call('save')
-        ->assertHasNoErrors();
-
-    expect($soal->fresh()->pertanyaan)->toBe('Baru');
-});
-
-test('tandaiJawaban marks the clicked pilihan as the answer', function () {
-    actingAsAdmin();
-    $bankSoal = BankSoal::factory()->create();
-
-    Livewire::test('admin.soal.manager', ['bankSoalId' => $bankSoal->id])
-        ->call('create')
-        ->assertSet('jawaban', '')
-        ->call('tandaiJawaban', 'C')
-        ->assertSet('jawaban', 'C')
-        ->call('tandaiJawaban', 'A')
-        ->assertSet('jawaban', 'A');
-});
-
-test('a soal created via tandaiJawaban persists the right jawaban', function () {
-    actingAsAdmin();
-    $bankSoal = BankSoal::factory()->create();
-
-    Livewire::test('admin.soal.manager', ['bankSoalId' => $bankSoal->id])
-        ->call('create')
-        ->set([
-            'pertanyaan' => 'Berapa 2 + 2?',
-            'pilihA' => '3',
-            'pilihB' => '4',
-            'pilihC' => '5',
-            'pilihD' => '6',
-        ])
-        ->call('tandaiJawaban', 'B')
-        ->call('save')
-        ->assertHasNoErrors();
-
-    expect(Soal::where('bank_soal_id', $bankSoal->id)->first()->jawaban)->toBe('B');
+        ->assertSet('totalSoal', 3)
+        ->set('search', 'nonexistent-query')
+        ->assertSet('totalSoal', 3);
 });
 
 test('it deletes a soal', function () {
@@ -141,4 +55,14 @@ test('it deletes a soal', function () {
     Livewire::test('admin.soal.manager', ['bankSoalId' => $bankSoal->id])->call('delete', $soal->id);
 
     expect(Soal::find($soal->id))->toBeNull();
+});
+
+test('a just-saved status message from the form page is picked up via session flash', function () {
+    actingAsAdmin();
+    $bankSoal = BankSoal::factory()->create();
+
+    session()->flash('status', 'Soal ditambahkan.');
+
+    Livewire::test('admin.soal.manager', ['bankSoalId' => $bankSoal->id])
+        ->assertSee('Soal ditambahkan.');
 });

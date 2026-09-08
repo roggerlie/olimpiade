@@ -7,9 +7,11 @@
         "dev": "vite"
     },
     "dependencies": {
+        "@wiris/mathtype-tinymce7": "^8.15.2",
         "alpinejs": "^3.14.9",
         "axios": "^1.7.9",
-        "flatpickr": "^4.6.13"
+        "flatpickr": "^4.6.13",
+        "tinymce": "^8.9.0"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",

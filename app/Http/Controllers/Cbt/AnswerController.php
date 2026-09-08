@@ -23,7 +23,7 @@ class AnswerController extends Controller
         Gate::authorize('view', $pesertaUjian);
 
         if ($pesertaUjian->sudahSubmit()) {
-            return response()->json(['message' => 'Ujian sudah dikumpulkan.'], 422);
+            return response()->json(['message' => 'Ujian sudah diselesaikan.'], 422);
         }
 
         if ($pesertaUjian->waktuHabis()) {

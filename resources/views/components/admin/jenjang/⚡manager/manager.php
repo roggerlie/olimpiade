@@ -24,17 +24,21 @@ new class extends Component
     #[Computed]
     public function jenjang(): Collection
     {
-        return Jenjang::query()->orderBy('nama')->get();
+        return Jenjang::query()->orderBy('id')->get();
     }
 
     public function create(): void
     {
+        $this->authorize('master-data.manage');
+
         $this->resetForm();
         $this->showModal = true;
     }
 
     public function edit(int $id): void
     {
+        $this->authorize('master-data.manage');
+
         $jenjang = Jenjang::findOrFail($id);
 
         $this->editingId = $jenjang->id;
@@ -45,6 +49,8 @@ new class extends Component
 
     public function save(): void
     {
+        $this->authorize('master-data.manage');
+
         $data = $this->validate([
             'kode' => ['required', 'string', 'size:2', Rule::unique('jenjang', 'kode')->ignore($this->editingId)],
             'nama' => ['required', 'string', 'max:255'],
@@ -65,6 +71,8 @@ new class extends Component
 
     public function delete(int $id): void
     {
+        $this->authorize('master-data.manage');
+
         try {
             Jenjang::findOrFail($id)->delete();
             $this->statusMessage = 'Jenjang dihapus.';

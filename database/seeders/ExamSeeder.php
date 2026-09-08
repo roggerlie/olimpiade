@@ -12,7 +12,7 @@ use App\Models\Ujian;
 use Illuminate\Database\Seeder;
 
 /**
- * Seeds a complete, ready-to-take exam per jenjang (SD/SMP/SMA): bank soal
+ * Seeds a complete, ready-to-take exam per jenjang (SD/SLTP/SLTA): bank soal
  * with real arithmetic questions, an ujian whose session window is open
  * right now, and a few peserta already registered for it — so a student can
  * log in and run the whole "mulai → kerjakan → submit" flow without any
@@ -31,6 +31,10 @@ class ExamSeeder extends Seeder
     public function run(): void
     {
         $pelajaran = Pelajaran::factory()->create(['nama' => 'Matematika']);
+        // Extra mata pelajaran options for master data — no bank soal/ujian
+        // built around these (yet), unlike Matematika above.
+        Pelajaran::factory()->create(['nama' => 'Science']);
+        Pelajaran::factory()->create(['nama' => 'Bahasa Inggris']);
 
         $noreg = 1000001;
 
@@ -95,9 +99,9 @@ class ExamSeeder extends Seeder
     private function jenjangUjian(): array
     {
         return [
-            'SD' => ['kode' => 'SD'],
-            'SMP' => ['kode' => 'SP'],
-            'SMA' => ['kode' => 'SA'],
+            'SD' => ['kode' => '01'],
+            'SLTP' => ['kode' => '02'],
+            'SLTA' => ['kode' => '03'],
         ];
     }
 
@@ -147,7 +151,7 @@ class ExamSeeder extends Seeder
 
                 return ["Berapa hasil dari {$a} + {$b}?", $a + $b];
             })(),
-            'SMP' => (function () {
+            'SLTP' => (function () {
                 $a = random_int(2, 12);
                 $b = random_int(2, 12);
 

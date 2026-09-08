@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cbt;
 
 use App\Http\Controllers\Controller;
+use App\Models\Peserta;
 use App\Models\PesertaUjian;
 use App\Services\ExamAttemptService;
 use App\Services\ScoringService;
@@ -16,17 +17,41 @@ class ExamController extends Controller
     /**
      * The student's own dashboard: every ujian they're registered for, with
      * enough state (session window, started?, submitted?) for the view to
-     * decide what action — if any — to offer.
+     * decide what action — if any — to offer, plus a small summary count
+     * (total/selesai/belum) for the stat cards above the list.
      */
     public function dashboard(): View
     {
+        $peserta = Peserta::with('jenjang')->where('user_id', Auth::id())->firstOrFail();
+
         $pesertaUjian = PesertaUjian::query()
-            ->whereHas('peserta', fn ($q) => $q->where('user_id', Auth::id()))
+            ->where('peserta_id', $peserta->id)
             ->with(['ujian.pelajaran', 'ujian.jenjang'])
             ->get()
             ->sortBy('ujian.sesi_mulai');
 
-        return view('cbt.dashboard', ['pesertaUjian' => $pesertaUjian]);
+        $selesai = $pesertaUjian->filter(fn (PesertaUjian $su) => $su->sudahSubmit())->count();
+
+        // The one thing (if any) most worth a student's attention right now,
+        // surfaced in its own card above the plain list: an attempt already
+        // in progress outranks everything (they left off mid-exam), then one
+        // whose session window is open and just waiting to be started, then
+        // simply the soonest upcoming one. Already-submitted attempts never
+        // qualify — nothing left to act on there.
+        $prioritas = $pesertaUjian->first(fn (PesertaUjian $su) => ! $su->sudahSubmit() && $su->waktu_mulai !== null)
+            ?? $pesertaUjian->first(fn (PesertaUjian $su) => ! $su->sudahSubmit() && $su->ujian->sesiSedangBerlangsung())
+            ?? $pesertaUjian->first(fn (PesertaUjian $su) => ! $su->sudahSubmit() && now()->lt($su->ujian->sesi_mulai));
+
+        return view('cbt.dashboard', [
+            'peserta' => $peserta,
+            'pesertaUjian' => $pesertaUjian,
+            'prioritas' => $prioritas,
+            'statistik' => [
+                'total' => $pesertaUjian->count(),
+                'selesai' => $selesai,
+                'belumSelesai' => $pesertaUjian->count() - $selesai,
+            ],
+        ]);
     }
 
     /**
@@ -72,7 +97,7 @@ class ExamController extends Controller
             $scoring->submit($pesertaUjian);
 
             return redirect()->route('cbt.ujian.hasil', $pesertaUjian)
-                ->with('error', 'Waktu ujian sudah habis, jawabanmu otomatis dikumpulkan.');
+                ->with('error', 'Waktu ujian sudah habis, jawabanmu otomatis diselesaikan.');
         }
 
         $pesertaUjian->load('ujian');

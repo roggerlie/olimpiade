@@ -3,8 +3,9 @@
 use App\Models\Soal;
 use Illuminate\Database\QueryException;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Validator;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -14,31 +15,33 @@ new class extends Component
 
     public int $bankSoalId;
 
-    public ?int $editingId = null;
-
-    public string $pertanyaan = '';
-
-    public string $pilihA = '';
-
-    public string $pilihB = '';
-
-    public string $pilihC = '';
-
-    public string $pilihD = '';
-
-    public ?string $pilihE = null;
-
-    public string $jawaban = '';
-
-    public bool $showModal = false;
-
     public ?string $statusMessage = null;
 
     public ?string $errorMessage = null;
 
+    #[Url(as: 'q')]
+    public string $search = '';
+
     public function mount(int $bankSoalId): void
     {
         $this->bankSoalId = $bankSoalId;
+        // Tambah/Ubah Soal live on their own page now (not this component's
+        // modal) — see admin.soal.form — so a just-saved status message
+        // arrives via a session flash instead of being set directly here.
+        $this->statusMessage = session('status');
+    }
+
+    public function updated(string $property): void
+    {
+        if ($property === 'search') {
+            $this->resetPage();
+        }
+    }
+
+    #[On('soal-imported')]
+    public function refreshList(): void
+    {
+        unset($this->soal, $this->totalSoal);
     }
 
     #[Computed]
@@ -46,120 +49,35 @@ new class extends Component
     {
         return Soal::query()
             ->where('bank_soal_id', $this->bankSoalId)
+            ->when($this->search, fn ($query) => $query->where('pertanyaan', 'like', "%{$this->search}%"))
             ->orderBy('id')
             ->paginate(10);
     }
 
-    protected function rules(): array
-    {
-        return [
-            'pertanyaan' => ['required', 'string'],
-            'pilihA' => ['required', 'string'],
-            'pilihB' => ['required', 'string'],
-            'pilihC' => ['required', 'string'],
-            'pilihD' => ['required', 'string'],
-            'pilihE' => ['nullable', 'string'],
-            'jawaban' => ['required', 'in:A,B,C,D,E'],
-        ];
-    }
-
-    public function create(): void
-    {
-        $this->resetForm();
-        $this->showModal = true;
-    }
-
     /**
-     * Marks one pilihan as the correct answer — called by clicking its
-     * letter badge in the form, replacing the old disconnected "Jawaban
-     * Benar" dropdown so marking an answer can't drift from the option
-     * it's actually next to.
+     * Unfiltered count, so the "N Soal" badge next to + Tambah Soal always
+     * reads as the bank's real total — independent of what `search` narrows
+     * the list below down to.
      */
-    public function tandaiJawaban(string $huruf): void
+    #[Computed]
+    public function totalSoal(): int
     {
-        $this->jawaban = $huruf;
-    }
-
-    public function edit(int $id): void
-    {
-        $soal = Soal::findOrFail($id);
-
-        $this->editingId = $soal->id;
-        $this->pertanyaan = $soal->pertanyaan;
-        $this->pilihA = $soal->pilih_a;
-        $this->pilihB = $soal->pilih_b;
-        $this->pilihC = $soal->pilih_c;
-        $this->pilihD = $soal->pilih_d;
-        $this->pilihE = $soal->pilih_e;
-        $this->jawaban = $soal->jawaban;
-        $this->showModal = true;
-    }
-
-    public function save(): void
-    {
-        $data = Validator::make(
-            [
-                'pertanyaan' => $this->pertanyaan,
-                'pilihA' => $this->pilihA,
-                'pilihB' => $this->pilihB,
-                'pilihC' => $this->pilihC,
-                'pilihD' => $this->pilihD,
-                'pilihE' => $this->pilihE,
-                'jawaban' => $this->jawaban,
-            ],
-            $this->rules()
-        )->after(function ($validator) {
-            if ($this->jawaban === 'E' && blank($this->pilihE)) {
-                $validator->errors()->add('jawaban', 'Jawaban E dipilih tapi pilihan E belum diisi.');
-            }
-        })->validate();
-
-        $payload = [
-            'bank_soal_id' => $this->bankSoalId,
-            'pertanyaan' => $data['pertanyaan'],
-            'pilih_a' => $data['pilihA'],
-            'pilih_b' => $data['pilihB'],
-            'pilih_c' => $data['pilihC'],
-            'pilih_d' => $data['pilihD'],
-            'pilih_e' => $data['pilihE'],
-            'jawaban' => $data['jawaban'],
-        ];
-
-        if ($this->editingId) {
-            Soal::findOrFail($this->editingId)->update($payload);
-            $this->statusMessage = 'Soal diperbarui.';
-        } else {
-            Soal::create($payload);
-            $this->statusMessage = 'Soal ditambahkan.';
-        }
-
-        $this->errorMessage = null;
-        $this->closeModal();
-        unset($this->soal);
+        return Soal::query()->where('bank_soal_id', $this->bankSoalId)->count();
     }
 
     public function delete(int $id): void
     {
+        $this->authorize('bank-soal.manage');
+
         try {
             Soal::findOrFail($id)->delete();
             $this->statusMessage = 'Soal dihapus.';
             $this->errorMessage = null;
+            unset($this->totalSoal);
         } catch (QueryException) {
             $this->errorMessage = 'Soal tidak bisa dihapus karena sudah dijawab oleh peserta pada suatu ujian.';
         }
 
         unset($this->soal);
-    }
-
-    public function closeModal(): void
-    {
-        $this->showModal = false;
-        $this->resetForm();
-    }
-
-    private function resetForm(): void
-    {
-        $this->reset(['editingId', 'pertanyaan', 'pilihA', 'pilihB', 'pilihC', 'pilihD', 'pilihE', 'jawaban']);
-        $this->resetErrorBag();
     }
 };

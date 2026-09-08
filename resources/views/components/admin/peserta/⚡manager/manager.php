@@ -62,14 +62,14 @@ new class extends Component
                 });
             })
             ->when($this->filterJenjangId, fn ($query) => $query->where('jenjang_id', $this->filterJenjangId))
-            ->orderBy('nama')
+            ->orderBy('noreg')
             ->paginate(10);
     }
 
     #[Computed]
     public function jenjangPilihan(): Collection
     {
-        return Jenjang::query()->orderBy('nama')->get();
+        return Jenjang::query()->orderBy('id')->get();
     }
 
     #[On('peserta-imported')]

@@ -4,7 +4,7 @@
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Jenjang</label>
                 <x-form.select name="jenjang" placeholder="Semua Jenjang" wrapper-class="w-64">
-                    @foreach (\App\Models\Jenjang::orderBy('nama')->get() as $jenjang)
+                    @foreach (\App\Models\Jenjang::orderBy('id')->get() as $jenjang)
                         <option value="{{ $jenjang->id }}">{{ $jenjang->nama }}</option>
                     @endforeach
                 </x-form.select>

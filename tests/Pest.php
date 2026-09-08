@@ -2,6 +2,7 @@
 
 use App\Models\Peserta;
 use App\Models\User;
+use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -53,9 +54,11 @@ function something()
 }
 
 /**
- * Create an admin user, assign the `admin` role, and log the current test in
- * as that user. Used by Livewire component tests that require an
- * authenticated admin (e.g. tests/Feature/Admin/*).
+ * Create a user, assign the `administrator` role (full access to every
+ * /admin permission via the Gate::before super-admin bypass), and log the
+ * current test in as that user. Used by Livewire component tests that
+ * require an authenticated admin (e.g. tests/Feature/Admin/*) and that
+ * aren't specifically testing the admin/operator permission boundary.
  *
  * Also seeds the `peserta` role — admin-side flows that create peserta accounts
  * (Admin\Peserta\Manager, App\Imports\PesertaImport) assign it immediately, so it
@@ -63,14 +66,32 @@ function something()
  */
 function actingAsAdmin(): User
 {
-    Role::findOrCreate('admin', 'web');
+    Role::findOrCreate('administrator', 'web');
     Role::findOrCreate('peserta', 'web');
 
     $admin = User::factory()->create();
-    $admin->assignRole('admin');
+    $admin->assignRole('administrator');
     test()->actingAs($admin);
 
     return $admin;
+}
+
+/**
+ * Create a user under the given /admin role (`admin` or `operator`, seeded
+ * with that role's real permissions via PermissionSeeder) and log the
+ * current test in as that user. Used by permission-boundary tests that
+ * need a non-administrator actor — `actingAsAdmin()` bypasses every
+ * permission check and can't exercise those boundaries.
+ */
+function actingAsAdminRole(string $role): User
+{
+    (new PermissionSeeder)->run();
+
+    $user = User::factory()->create();
+    $user->assignRole($role);
+    test()->actingAs($user);
+
+    return $user;
 }
 
 /**

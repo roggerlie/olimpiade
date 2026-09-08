@@ -39,7 +39,7 @@ new class extends Component
     #[Computed]
     public function jenjangPilihan(): Collection
     {
-        return Jenjang::query()->orderBy('nama')->get();
+        return Jenjang::query()->orderBy('id')->get();
     }
 
     #[Computed]
@@ -50,12 +50,16 @@ new class extends Component
 
     public function create(): void
     {
+        $this->authorize('bank-soal.manage');
+
         $this->resetForm();
         $this->showModal = true;
     }
 
     public function edit(int $id): void
     {
+        $this->authorize('bank-soal.manage');
+
         $bankSoal = BankSoal::findOrFail($id);
 
         $this->editingId = $bankSoal->id;
@@ -68,6 +72,8 @@ new class extends Component
 
     public function save(): void
     {
+        $this->authorize('bank-soal.manage');
+
         $data = $this->validate([
             'jenjangId' => ['required', 'exists:jenjang,id'],
             'pelajaranId' => ['required', 'exists:pelajaran,id'],
@@ -97,6 +103,8 @@ new class extends Component
 
     public function delete(int $id): void
     {
+        $this->authorize('bank-soal.manage');
+
         try {
             BankSoal::findOrFail($id)->delete();
             $this->statusMessage = 'Bank soal dihapus.';

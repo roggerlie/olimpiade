@@ -36,7 +36,7 @@ test('simpan is rejected once the attempt is already submitted', function () {
 
     $this->postJson(route('cbt.ujian.jawab', $pesertaUjian), ['soal_id' => 1, 'jawaban' => 'A'])
         ->assertStatus(422)
-        ->assertJson(['message' => 'Ujian sudah dikumpulkan.']);
+        ->assertJson(['message' => 'Ujian sudah diselesaikan.']);
 });
 
 test('simpan is rejected once the deadline has passed', function () {

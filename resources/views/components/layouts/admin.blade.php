@@ -20,6 +20,11 @@
     @vite(['resources/css/app.css', 'resources/js/admin.js'])
     @include('partials.theme-scripts')
     @livewireStyles
+
+    {{-- Per-page extra <head> assets (e.g. the Soal manager pushing
+        resources/js/soal-editor.js) that shouldn't load on every admin
+        page the way admin.js does. --}}
+    @stack('head')
 </head>
 
 <body

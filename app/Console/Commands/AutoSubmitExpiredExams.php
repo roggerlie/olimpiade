@@ -11,7 +11,7 @@ use Illuminate\Console\Command;
 /**
  * Safety net for the client-side timer: a student who closes their browser
  * (or loses connection) right at the deadline never gets the chance to hit
- * "Kumpulkan" — this scores and closes out their attempt anyway. Scheduled
+ * "Selesaikan" — this scores and closes out their attempt anyway. Scheduled
  * every minute; see routes/console.php.
  */
 #[Signature('exam:auto-submit')]

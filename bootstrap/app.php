@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -14,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         then: function (): void {
             Route::middleware('web')->group(__DIR__.'/../routes/auth.php');
-            Route::middleware(['web', 'auth', 'role:admin'])
+            Route::middleware(['web', 'auth', 'role:administrator|admin|operator'])
                 ->prefix('admin')
                 ->name('admin.')
                 ->group(__DIR__.'/../routes/admin.php');
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
         ]);
 
         // Two guests, two homes: an unauthenticated visit to /admin/* belongs
@@ -36,7 +38,9 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('admin/*') ? route('admin.login') : route('login')
         );
         $middleware->redirectUsersTo(
-            fn (Request $request) => $request->user()?->hasRole('admin') ? route('admin.dashboard') : route('cbt.dashboard')
+            fn (Request $request) => $request->user()?->hasAnyRole(['administrator', 'admin', 'operator'])
+                ? route('admin.dashboard')
+                : route('cbt.dashboard')
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -51,8 +51,6 @@
                 </svg>
             </button>
 
-            {{-- Search bar (desktop only — see x-admin.search-bar) --}}
-            <livewire:admin.search-bar />
         </div>
 
         {{-- Row 2 (collapsible on mobile): theme toggle + user dropdown --}}

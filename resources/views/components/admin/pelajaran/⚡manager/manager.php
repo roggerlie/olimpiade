@@ -26,12 +26,16 @@ new class extends Component
 
     public function create(): void
     {
+        $this->authorize('master-data.manage');
+
         $this->resetForm();
         $this->showModal = true;
     }
 
     public function edit(int $id): void
     {
+        $this->authorize('master-data.manage');
+
         $pelajaran = Pelajaran::findOrFail($id);
 
         $this->editingId = $pelajaran->id;
@@ -41,6 +45,8 @@ new class extends Component
 
     public function save(): void
     {
+        $this->authorize('master-data.manage');
+
         $data = $this->validate([
             'nama' => ['required', 'string', 'max:255'],
         ]);
@@ -60,6 +66,8 @@ new class extends Component
 
     public function delete(int $id): void
     {
+        $this->authorize('master-data.manage');
+
         try {
             Pelajaran::findOrFail($id)->delete();
             $this->statusMessage = 'Pelajaran dihapus.';

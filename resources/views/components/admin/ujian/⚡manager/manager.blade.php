@@ -1,8 +1,10 @@
 <div>
     <x-common.component-card title="Ujian" desc="Jadwal ujian per bank soal — durasi dihitung otomatis dari sesi mulai & selesai.">
-        <div class="mb-4 flex justify-end">
-            <x-ui.button wire:click="create">+ Tambah Ujian</x-ui.button>
-        </div>
+        @can('ujian.manage')
+            <div class="mb-4 flex justify-end">
+                <x-ui.button wire:click="create">+ Tambah Ujian</x-ui.button>
+            </div>
+        @endcan
 
         @if ($statusMessage)
             <x-ui.alert variant="success" class="mb-4">{{ $statusMessage }}</x-ui.alert>
@@ -51,8 +53,10 @@
                                 <a href="{{ route('admin.ujian.peserta', $ujian) }}" class="mr-3 text-brand-500 hover:text-brand-600">Peserta</a>
                                 <x-common.table-actions>
                                     <x-common.dropdown-item as="a" href="{{ route('admin.ujian.leaderboard', $ujian) }}">Leaderboard</x-common.dropdown-item>
-                                    <x-common.dropdown-item wire:click="edit({{ $ujian->id }})">Ubah</x-common.dropdown-item>
-                                    <x-common.dropdown-item danger wire:click="delete({{ $ujian->id }})" wire:confirm="Yakin ingin menghapus ujian ini?">Hapus</x-common.dropdown-item>
+                                    @can('ujian.manage')
+                                        <x-common.dropdown-item wire:click="edit({{ $ujian->id }})">Ubah</x-common.dropdown-item>
+                                        <x-common.dropdown-item danger wire:click="delete({{ $ujian->id }})" wire:confirm="Yakin ingin menghapus ujian ini?">Hapus</x-common.dropdown-item>
+                                    @endcan
                                 </x-common.table-actions>
                             </td>
                         </tr>

@@ -1,8 +1,10 @@
 <div>
-    <x-common.component-card title="Jenjang" desc="Kategori tingkat pendidikan peserta (SD, SMP, SMA, dsb).">
-        <div class="mb-4 flex justify-end">
-            <x-ui.button wire:click="create">+ Tambah Jenjang</x-ui.button>
-        </div>
+    <x-common.component-card title="Jenjang" desc="Kategori tingkat pendidikan peserta (SD, SLTP, SLTA, dsb).">
+        @can('master-data.manage')
+            <div class="mb-4 flex justify-end">
+                <x-ui.button wire:click="create">+ Tambah Jenjang</x-ui.button>
+            </div>
+        @endcan
 
         @if ($statusMessage)
             <x-ui.alert variant="success" class="mb-4">{{ $statusMessage }}</x-ui.alert>
@@ -12,7 +14,11 @@
             <x-ui.alert variant="error" class="mb-4">{{ $errorMessage }}</x-ui.alert>
         @endif
 
-        <div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800">
+        {{-- No overflow-x-auto here: only 3 short columns (never need horizontal
+            scroll), and overflow-x-auto without overflow-y set forces the browser
+            to also compute overflow-y as auto — which shows a spurious vertical
+            scrollbar the moment the "Aksi" dropdown opens and overflows this box. --}}
+        <div class="rounded-xl border border-gray-100 dark:border-gray-800">
             <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-800">
                 <thead class="bg-gray-50 dark:bg-white/[0.02]">
                     <tr>
@@ -27,10 +33,14 @@
                             <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $jenjang->kode }}</td>
                             <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $jenjang->nama }}</td>
                             <td class="px-5 py-3 text-right text-sm">
-                                <x-common.table-actions>
-                                    <x-common.dropdown-item wire:click="edit({{ $jenjang->id }})">Ubah</x-common.dropdown-item>
-                                    <x-common.dropdown-item danger wire:click="delete({{ $jenjang->id }})" wire:confirm="Yakin ingin menghapus jenjang ini?">Hapus</x-common.dropdown-item>
-                                </x-common.table-actions>
+                                @can('master-data.manage')
+                                    <x-common.table-actions>
+                                        <x-common.dropdown-item wire:click="edit({{ $jenjang->id }})">Ubah</x-common.dropdown-item>
+                                        <x-common.dropdown-item danger wire:click="delete({{ $jenjang->id }})" wire:confirm="Yakin ingin menghapus jenjang ini?">Hapus</x-common.dropdown-item>
+                                    </x-common.table-actions>
+                                @else
+                                    <span class="text-gray-300 dark:text-gray-700">—</span>
+                                @endcan
                             </td>
                         </tr>
                     @empty
@@ -46,7 +56,7 @@
     </x-common.component-card>
 
     <x-ui.modal wire-model="showModal" class="max-w-md m-4">
-        <form wire:submit="save" class="p-6">
+        <form wire:submit="save" class="max-h-[85vh] overflow-y-auto p-6">
             <h3 class="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90">
                 {{ $editingId ? 'Ubah Jenjang' : 'Tambah Jenjang' }}
             </h3>

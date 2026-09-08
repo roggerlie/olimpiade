@@ -14,6 +14,20 @@
     morph, and the flatpickr instance attached to the old node gets torn
     down without a new one replacing it — the field silently stops opening
     its calendar. A stable id avoids this entirely.
+
+    ALSO IMPORTANT — do not pass `static: true` to flatpickr here. That mode
+    makes flatpickr wrap the input in its own `<div class="flatpickr-wrapper">`
+    (extra DOM the server-rendered HTML doesn't have), and the very next
+    Livewire morph — any wire-triggered update while the field is on screen,
+    edit() included — sees that mismatch and replaces the input rather than
+    patching it in place. `x-init` only runs once per component mount, so it
+    never reinitializes on the replacement node: the calendar silently stops
+    opening (confirmed live — the flatpickr instance is left pointing at the
+    old, now-detached input). Leaving flatpickr in its default (non-static)
+    mode both avoids the wrapper entirely and appends the calendar to
+    `document.body`, which happens to also be how it escapes this modal's
+    `overflow-y-auto` clipping and lands above it (flatpickr's default
+    z-index already matches x-ui.modal's).
 --}}
 @props([
     'id' => 'datepicker-'.uniqid(),
@@ -33,7 +47,7 @@
                     mode: @js($mode),
                     enableTime: @js((bool) $enableTime),
                     time_24hr: true,
-                    static: true,
+                    appendTo: document.body,
                     monthSelectorType: 'static',
                     dateFormat: @js($dateFormat),
                     defaultDate: @js($defaultDate),

@@ -1,8 +1,10 @@
 <div>
     <x-common.component-card title="Bank Soal" desc="Kumpulan soal per jenjang & pelajaran, sumber soal untuk ujian.">
-        <div class="mb-4 flex justify-end">
-            <x-ui.button wire:click="create">+ Tambah Bank Soal</x-ui.button>
-        </div>
+        @can('bank-soal.manage')
+            <div class="mb-4 flex justify-end">
+                <x-ui.button wire:click="create">+ Tambah Bank Soal</x-ui.button>
+            </div>
+        @endcan
 
         @if ($statusMessage)
             <x-ui.alert variant="success" class="mb-4">{{ $statusMessage }}</x-ui.alert>
@@ -34,10 +36,12 @@
                             </td>
                             <td class="px-5 py-3 text-right text-sm">
                                 <a href="{{ route('admin.bank-soal.soal', $bankSoal) }}" class="mr-3 text-brand-500 hover:text-brand-600">Kelola Soal</a>
-                                <x-common.table-actions>
-                                    <x-common.dropdown-item wire:click="edit({{ $bankSoal->id }})">Ubah</x-common.dropdown-item>
-                                    <x-common.dropdown-item danger wire:click="delete({{ $bankSoal->id }})" wire:confirm="Yakin ingin menghapus bank soal ini? Semua soal di dalamnya ikut terhapus.">Hapus</x-common.dropdown-item>
-                                </x-common.table-actions>
+                                @can('bank-soal.manage')
+                                    <x-common.table-actions>
+                                        <x-common.dropdown-item wire:click="edit({{ $bankSoal->id }})">Ubah</x-common.dropdown-item>
+                                        <x-common.dropdown-item danger wire:click="delete({{ $bankSoal->id }})" wire:confirm="Yakin ingin menghapus bank soal ini? Semua soal di dalamnya ikut terhapus.">Hapus</x-common.dropdown-item>
+                                    </x-common.table-actions>
+                                @endcan
                             </td>
                         </tr>
                     @empty
@@ -53,7 +57,7 @@
     </x-common.component-card>
 
     <x-ui.modal wire-model="showModal" class="max-w-lg m-4">
-        <form wire:submit="save" class="p-6">
+        <form wire:submit="save" class="max-h-[85vh] overflow-y-auto p-6">
             <h3 class="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90">
                 {{ $editingId ? 'Ubah Bank Soal' : 'Tambah Bank Soal' }}
             </h3>
