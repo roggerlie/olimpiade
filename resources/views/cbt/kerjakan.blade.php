@@ -67,10 +67,8 @@
         </div>
 
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_260px]">
-            {{-- Question card — the top accent bar just repeats the header's
-                brand color so this card doesn't read as a plain flat box. --}}
+            {{-- Question card --}}
             <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-white/[0.03]">
-                <div class="h-1.5 bg-gradient-to-r from-brand-500 to-brand-700"></div>
                 <div class="p-6">
                 <div class="mb-4 flex items-center justify-between">
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -160,8 +158,6 @@
             </div>
         </div>
     </div>
-
-    <x-cbt.sponsor-strip />
 
     @push('scripts')
         <script>

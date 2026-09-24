@@ -59,15 +59,10 @@ function something()
  * current test in as that user. Used by Livewire component tests that
  * require an authenticated admin (e.g. tests/Feature/Admin/*) and that
  * aren't specifically testing the admin/operator permission boundary.
- *
- * Also seeds the `peserta` role — admin-side flows that create peserta accounts
- * (Admin\Peserta\Manager, App\Imports\PesertaImport) assign it immediately, so it
- * needs to exist even though this actor is the admin, not a student.
  */
 function actingAsAdmin(): User
 {
     Role::findOrCreate('administrator', 'web');
-    Role::findOrCreate('peserta', 'web');
 
     $admin = User::factory()->create();
     $admin->assignRole('administrator');
@@ -95,14 +90,15 @@ function actingAsAdminRole(string $role): User
 }
 
 /**
- * Create a peserta (with its paired, `peserta`-role login account) and log the
- * current test in as that user. Used by CBT feature tests
- * (tests/Feature/Cbt/*, tests/Feature/Services/*).
+ * Create a peserta and log the current test in as that peserta, on its own
+ * `peserta` guard (see config/auth.php — peserta are no longer a paired
+ * User row under a Spatie role, they're Authenticatable in their own
+ * right). Used by CBT feature tests (tests/Feature/Cbt/*, tests/Feature/Services/*).
  */
 function actingAsPeserta(array $attributes = []): Peserta
 {
     $peserta = Peserta::factory()->create($attributes);
-    test()->actingAs($peserta->user);
+    test()->actingAs($peserta, 'peserta');
 
     return $peserta;
 }

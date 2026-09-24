@@ -13,10 +13,10 @@
 
         <div class="relative flex flex-wrap items-center gap-4">
             <div class="rounded-full ring-4 ring-white/25">
-                <x-ui.avatar :name="auth()->user()->name" size="xlarge" />
+                <x-ui.avatar :name="$peserta->nama" size="xlarge" />
             </div>
             <div>
-                <h1 class="text-lg font-semibold">Halo, {{ auth()->user()->name }}</h1>
+                <h1 class="text-lg font-semibold">Halo, {{ $peserta->nama }}</h1>
                 <div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-white/80">
                     <span>No. Registrasi {{ $peserta->noreg }}</span>
                     <span class="text-white/40">&middot;</span>
@@ -53,13 +53,10 @@
                         Lanjutkan
                     </a>
                 @elseif ($prioritas->ujian->sesiSedangBerlangsung())
-                    <form method="POST" action="{{ route('cbt.ujian.mulai', $prioritas) }}">
-                        @csrf
-                        <button type="submit"
-                            class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600">
-                            Mulai Ujian
-                        </button>
-                    </form>
+                    <a href="{{ route('cbt.ujian.petunjuk', $prioritas) }}"
+                        class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600">
+                        Mulai Ujian
+                    </a>
                 @else
                     <x-ui.badge color="light">Belum Dibuka</x-ui.badge>
                 @endif
@@ -149,13 +146,10 @@
                                     {{ now()->lt($su->ujian->sesi_mulai) ? 'Belum Dibuka' : 'Sesi Ditutup' }}
                                 </x-ui.badge>
                             @else
-                                <form method="POST" action="{{ route('cbt.ujian.mulai', $su) }}">
-                                    @csrf
-                                    <button type="submit"
-                                        class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600">
-                                        Mulai Ujian
-                                    </button>
-                                </form>
+                                <a href="{{ route('cbt.ujian.petunjuk', $su) }}"
+                                    class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600">
+                                    Mulai Ujian
+                                </a>
                             @endif
                         </div>
                     </div>

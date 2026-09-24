@@ -4,9 +4,8 @@ namespace Database\Factories;
 
 use App\Models\Jenjang;
 use App\Models\Peserta;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * @extends Factory<Peserta>
@@ -20,30 +19,21 @@ class PesertaFactory extends Factory
      */
     public function definition(): array
     {
-        $noreg = fake()->unique()->numerify('#######');
-
         return [
-            // Kept in sync with the paired User's username, mirroring the
-            // real invariant enforced by Admin\Peserta\Manager / PesertaImport:
-            // a peserta logs in with their noreg.
-            'user_id' => User::factory()->state(['username' => $noreg]),
             'jenjang_id' => Jenjang::factory(),
-            'noreg' => $noreg,
+            // 10 digits, matching a real NISN.
+            'noreg' => fake()->unique()->numerify('##########'),
             'nama' => fake()->name(),
             'asal_sekolah' => fake()->company().' School',
+            'password' => static::$password ??= Hash::make('password'),
+            'password_plain' => 'password',
         ];
     }
 
-    public function configure(): static
-    {
-        return $this->afterCreating(function (Peserta $peserta) {
-            // Runs after both rows exist, so this sees the final `noreg`
-            // even when a test overrides it via ->create(['noreg' => ...]) —
-            // the sync in definition() alone only covers the unoverridden case.
-            $peserta->user->forceFill(['username' => $peserta->noreg])->save();
-
-            Role::findOrCreate('peserta', 'web');
-            $peserta->user->assignRole('peserta');
-        });
-    }
+    /**
+     * The current password being used by the factory, cached the same way
+     * Laravel's own UserFactory does it — Hash::make() is expensive enough
+     * that re-running it per row noticeably slows down large test suites.
+     */
+    protected static ?string $password = null;
 }

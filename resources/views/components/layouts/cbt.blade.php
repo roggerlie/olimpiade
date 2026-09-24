@@ -23,7 +23,7 @@
     (rather than only on the dashboard/hasil pages) so switching modes is
     available consistently everywhere, exam screen included.
 --}}
-<body class="dark:bg-gray-900 dark:text-white/90" x-data>
+<body class="cbt-theme dark:bg-gray-900 dark:text-white/90" x-data>
     <div class="min-h-screen">
         <header class="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
             <span class="text-sm font-semibold text-gray-800 dark:text-white/90">CBT Olimpiade</span>
@@ -45,8 +45,8 @@
                 <x-common.dropdown-menu>
                     <x-slot name="button">
                         <div class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                            <x-ui.avatar :name="auth()->user()->name" size="small" />
-                            <span class="hidden sm:block">{{ auth()->user()->name }}</span>
+                            <x-ui.avatar :name="auth('peserta')->user()->nama" size="small" />
+                            <span class="hidden sm:block">{{ auth('peserta')->user()->nama }}</span>
                         </div>
                     </x-slot>
 

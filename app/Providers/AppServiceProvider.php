@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -24,8 +25,11 @@ class AppServiceProvider extends ServiceProvider
         // Super-admin bypass: `administrator` passes every `can()` /
         // `@can` / `authorize()` check regardless of which permissions are
         // actually assigned to the role, so the permission list in
-        // PermissionSeeder never needs to be kept in sync with it.
-        Gate::before(fn ($user, string $ability) => $user->hasRole('administrator') ? true : null);
+        // PermissionSeeder never needs to be kept in sync with it. Gate::before
+        // runs for every check regardless of guard, so it also sees Peserta
+        // (the `peserta` guard's user, see App\Models\Peserta) — which has no
+        // Spatie roles at all, hence the User instanceof guard below.
+        Gate::before(fn ($user, string $ability) => $user instanceof User && $user->hasRole('administrator') ? true : null);
 
         // Force Indonesian for date/duration formatting (Carbon's translatedFormat()/
         // diffForHumans(), used across Ujian, Peserta-Ujian, and CBT views), matching

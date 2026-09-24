@@ -67,38 +67,36 @@ test('it refuses to unregister a peserta who already started the exam', function
     expect(PesertaUjian::where('peserta_id', $peserta->id)->where('ujian_id', $ujian->id)->exists())->toBeTrue();
 });
 
-test('daftarkanSemua registers every unregistered peserta of the jenjang only', function () {
+test('daftarkanYangBerminat only registers peserta who declared interest in this ujian mapel', function () {
     actingAsAdmin();
     $jenjang = Jenjang::factory()->create();
-    $otherJenjang = Jenjang::factory()->create();
+    $ujian = ujianForJenjang($jenjang);
+
+    $berminat = Peserta::factory()->create(['jenjang_id' => $jenjang->id]);
+    $berminat->pelajaranLomba()->attach($ujian->pelajaran_id);
+
+    $tidakBerminat = Peserta::factory()->create(['jenjang_id' => $jenjang->id]);
+
+    Livewire::test('admin.peserta-ujian.manager', ['ujianId' => $ujian->id])
+        ->call('daftarkanYangBerminat')
+        ->assertSet('statusMessage', fn ($message) => str_contains($message, '1 peserta'));
+
+    expect(PesertaUjian::where('peserta_id', $berminat->id)->where('ujian_id', $ujian->id)->exists())->toBeTrue()
+        ->and(PesertaUjian::where('peserta_id', $tidakBerminat->id)->where('ujian_id', $ujian->id)->exists())->toBeFalse();
+});
+
+test('daftarkanYangBerminat skips a peserta already registered', function () {
+    actingAsAdmin();
+    $jenjang = Jenjang::factory()->create();
     $ujian = ujianForJenjang($jenjang);
 
     $sudahTerdaftar = Peserta::factory()->create(['jenjang_id' => $jenjang->id]);
+    $sudahTerdaftar->pelajaranLomba()->attach($ujian->pelajaran_id);
     PesertaUjian::factory()->create(['peserta_id' => $sudahTerdaftar->id, 'ujian_id' => $ujian->id]);
 
-    $belumTerdaftar = Peserta::factory()->count(2)->create(['jenjang_id' => $jenjang->id]);
-    Peserta::factory()->create(['jenjang_id' => $otherJenjang->id]);
-
     Livewire::test('admin.peserta-ujian.manager', ['ujianId' => $ujian->id])
-        ->call('daftarkanSemua')
-        ->assertSet('statusMessage', fn ($message) => str_contains($message, '2 peserta baru'));
-
-    expect(PesertaUjian::where('ujian_id', $ujian->id)->count())->toBe(3);
-    foreach ($belumTerdaftar as $peserta) {
-        expect(PesertaUjian::where('peserta_id', $peserta->id)->where('ujian_id', $ujian->id)->exists())->toBeTrue();
-    }
-});
-
-test('daftarkanSemua is idempotent when everyone is already registered', function () {
-    actingAsAdmin();
-    $jenjang = Jenjang::factory()->create();
-    $ujian = ujianForJenjang($jenjang);
-    $peserta = Peserta::factory()->create(['jenjang_id' => $jenjang->id]);
-    PesertaUjian::factory()->create(['peserta_id' => $peserta->id, 'ujian_id' => $ujian->id]);
-
-    Livewire::test('admin.peserta-ujian.manager', ['ujianId' => $ujian->id])
-        ->call('daftarkanSemua')
-        ->assertSet('statusMessage', fn ($message) => str_contains($message, '0 peserta baru'));
+        ->call('daftarkanYangBerminat')
+        ->assertSet('statusMessage', fn ($message) => str_contains($message, '0 peserta'));
 
     expect(PesertaUjian::where('ujian_id', $ujian->id)->count())->toBe(1);
 });

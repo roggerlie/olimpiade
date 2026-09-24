@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    // "Login dengan Google" on /admin/login only — see
+    // App\Http\Controllers\Auth\GoogleAuthController. Link-only: it signs in
+    // an existing admin-tier account whose email matches, never creates one.
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+    ],
+
 ];

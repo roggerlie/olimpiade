@@ -15,7 +15,7 @@ test('it downloads nilai for the given ujian only', function () {
     $ujian = Ujian::factory()->create(['nama' => 'Ujian Matematika']);
     $otherUjian = Ujian::factory()->create();
 
-    $peserta = Peserta::factory()->create(['noreg' => '1000001', 'nama' => 'Budi Santoso']);
+    $peserta = Peserta::factory()->create(['noreg' => '1000000001', 'nama' => 'Budi Santoso']);
     PesertaUjian::factory()->selesai()->create(['peserta_id' => $peserta->id, 'ujian_id' => $ujian->id]);
     PesertaUjian::factory()->selesai()->create(['ujian_id' => $otherUjian->id]);
 
@@ -43,14 +43,23 @@ test('kartu peserta cetak shows only peserta from the selected jenjang', functio
     actingAsAdmin();
     $jenjangA = Jenjang::factory()->create();
     $jenjangB = Jenjang::factory()->create();
-    Peserta::factory()->create(['jenjang_id' => $jenjangA->id, 'noreg' => '1000001', 'nama' => 'Peserta A']);
-    Peserta::factory()->create(['jenjang_id' => $jenjangB->id, 'noreg' => '2000002', 'nama' => 'Peserta B']);
+    Peserta::factory()->create(['jenjang_id' => $jenjangA->id, 'noreg' => '1000000001', 'nama' => 'Peserta A']);
+    Peserta::factory()->create(['jenjang_id' => $jenjangB->id, 'noreg' => '2000000002', 'nama' => 'Peserta B']);
 
     $this->get(route('admin.kartu-peserta.cetak', ['jenjang' => $jenjangA->id]))
         ->assertOk()
         ->assertSee('Peserta A')
-        ->assertSee('1000001')
+        ->assertSee('1000000001')
         ->assertDontSee('Peserta B');
+});
+
+test('kartu peserta cetak shows the peserta\'s plaintext password', function () {
+    actingAsAdmin();
+    Peserta::factory()->create(['nama' => 'Budi Santoso', 'password_plain' => 'rahasia123']);
+
+    $this->get(route('admin.kartu-peserta.cetak'))
+        ->assertOk()
+        ->assertSee('rahasia123');
 });
 
 test('kartu peserta cetak without a jenjang filter shows every peserta', function () {

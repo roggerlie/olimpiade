@@ -42,7 +42,7 @@
     $icon = $icons[$variant] ?? $icons['info'];
 @endphp
 
-<div class="rounded-xl border p-4 {{ $containerClass }}" {{ $attributes }}>
+<div {{ $attributes->merge(['class' => "rounded-xl border p-4 {$containerClass}"]) }}>
     <div class="flex items-start gap-3">
         <div class="-mt-0.5 {{ $iconClass }}">
             {!! $icon !!}

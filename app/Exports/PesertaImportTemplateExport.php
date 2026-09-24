@@ -13,7 +13,7 @@ class PesertaImportTemplateExport implements FromArray, WithHeadings
 {
     public function headings(): array
     {
-        return ['noreg', 'nama', 'jenjang', 'asal_sekolah', 'password'];
+        return ['noreg', 'nama', 'jenjang', 'asal_sekolah', 'password', 'osains', 'omtk', 'obing'];
     }
 
     /**
@@ -22,7 +22,7 @@ class PesertaImportTemplateExport implements FromArray, WithHeadings
     public function array(): array
     {
         return [
-            ['1234567', 'Contoh Nama Peserta', '01', 'SD Contoh', ''],
+            ['0123456789', 'Contoh Nama Peserta', 'SLTA', 'SD Contoh', 'acak', '1', '1', '0'],
         ];
     }
 }

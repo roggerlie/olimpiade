@@ -13,9 +13,12 @@ class AdminMenu
      * Items whose `permission` the current user lacks are dropped — an
      * Operator, for instance, never sees Master Data or Bank Soal. Dashboard
      * has no `permission` key, so it's always visible to anyone who made it
-     * past the /admin role gate.
+     * past the /admin role gate. A `role` key (instead of, or alongside,
+     * `permission`) hides an item from anyone without that exact Spatie
+     * role — used for things that must never be delegatable via a
+     * permission (see Kelola Peran, routes/admin.php).
      *
-     * @return array<int, array{name: string, route: string, icon: string, permission?: string}>
+     * @return array<int, array{name: string, route: string, icon: string, permission?: string, role?: string}>
      */
     public static function items(): array
     {
@@ -27,12 +30,14 @@ class AdminMenu
             ['name' => 'Peserta', 'route' => 'admin.peserta.index', 'icon' => self::icon('peserta'), 'permission' => 'peserta.manage'],
             ['name' => 'Kartu Peserta', 'route' => 'admin.kartu-peserta.index', 'active' => 'admin.kartu-peserta.*', 'icon' => self::icon('kartu-peserta'), 'permission' => 'kartu-peserta.print'],
             ['name' => 'Kelola Pengguna', 'route' => 'admin.users.index', 'icon' => self::icon('users'), 'permission' => 'users.manage'],
+            ['name' => 'Kelola Peran', 'route' => 'admin.roles.index', 'icon' => self::icon('roles'), 'role' => 'administrator'],
             // Leaderboard lands here in a later phase.
         ];
 
         return array_values(array_filter(
             $items,
-            fn (array $item) => ! isset($item['permission']) || auth()->user()?->can($item['permission'])
+            fn (array $item) => (! isset($item['permission']) || auth()->user()?->can($item['permission']))
+                && (! isset($item['role']) || auth()->user()?->hasRole($item['role']))
         ));
     }
 
@@ -46,6 +51,7 @@ class AdminMenu
             'peserta' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 3.5C7.30558 3.5 3.5 7.30558 3.5 12C3.5 14.1526 4.3002 16.1184 5.61936 17.616C6.17279 15.3096 8.24852 13.5955 10.7246 13.5955H13.2746C15.7509 13.5955 17.8268 15.31 18.38 17.6167C19.6996 16.119 20.5 14.153 20.5 12C20.5 7.30558 16.6944 3.5 12 3.5ZM17.0246 18.8566V18.8455C17.0246 16.7744 15.3457 15.0955 13.2746 15.0955H10.7246C8.65354 15.0955 6.97461 16.7744 6.97461 18.8455V18.856C8.38223 19.8895 10.1198 20.5 12 20.5C13.8798 20.5 15.6171 19.8898 17.0246 18.8566ZM2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12ZM11.9991 7.25C10.8847 7.25 9.98126 8.15342 9.98126 9.26784C9.98126 10.3823 10.8847 11.2857 11.9991 11.2857C13.1135 11.2857 14.0169 10.3823 14.0169 9.26784C14.0169 8.15342 13.1135 7.25 11.9991 7.25ZM8.48126 9.26784C8.48126 7.32499 10.0563 5.75 11.9991 5.75C13.9419 5.75 15.5169 7.32499 15.5169 9.26784C15.5169 11.2107 13.9419 12.7857 11.9991 12.7857C10.0563 12.7857 8.48126 11.2107 8.48126 9.26784Z" fill="currentColor"/></svg>',
             'kartu-peserta' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.5 4.75C5.08579 4.75 4.75 5.08579 4.75 5.5V18.5C4.75 18.9142 5.08579 19.25 5.5 19.25H18.5C18.9142 19.25 19.25 18.9142 19.25 18.5V5.5C19.25 5.08579 18.9142 4.75 18.5 4.75H5.5ZM3.25 5.5C3.25 4.25736 4.25736 3.25 5.5 3.25H18.5C19.7426 3.25 20.75 4.25736 20.75 5.5V18.5C20.75 19.7426 19.7426 20.75 18.5 20.75H5.5C4.25736 20.75 3.25 19.7426 3.25 18.5V5.5ZM6.75 9.5C6.75 9.08579 7.08579 8.75 7.5 8.75H10.5C10.9142 8.75 11.25 9.08579 11.25 9.5V12.5C11.25 12.9142 10.9142 13.25 10.5 13.25H7.5C7.08579 13.25 6.75 12.9142 6.75 12.5V9.5ZM12.75 9.75C12.75 9.33579 13.0858 9 13.5 9H16.5C16.9142 9 17.25 9.33579 17.25 9.75C17.25 10.1642 16.9142 10.5 16.5 10.5H13.5C13.0858 10.5 12.75 10.1642 12.75 9.75ZM7.25 15.75C7.25 15.3358 7.58579 15 8 15H16C16.4142 15 16.75 15.3358 16.75 15.75C16.75 16.1642 16.4142 16.5 16 16.5H8C7.58579 16.5 7.25 16.1642 7.25 15.75Z" fill="currentColor"/></svg>',
             'users' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.00195 3.5C6.51667 3.5 4.50195 5.51472 4.50195 8C4.50195 10.4853 6.51667 12.5 9.00195 12.5C11.4872 12.5 13.502 10.4853 13.502 8C13.502 5.51472 11.4872 3.5 9.00195 3.5ZM6.00195 8C6.00195 6.34315 7.3451 5 9.00195 5C10.6588 5 12.002 6.34315 12.002 8C12.002 9.65685 10.6588 11 9.00195 11C7.3451 11 6.00195 9.65685 6.00195 8ZM16.252 6.5C15.8378 6.5 15.502 6.83579 15.502 7.25C15.502 7.66421 15.8378 8 16.252 8H16.262C16.6762 8 17.012 7.66421 17.012 7.25C17.012 6.83579 16.6762 6.5 16.262 6.5H16.252ZM3.00195 18C3.00195 14.9624 5.46437 12.5 8.50195 12.5H9.50195C12.5395 12.5 15.002 14.9624 15.002 18V18.75C15.002 19.7165 14.2185 20.5 13.252 20.5H4.75195C3.78545 20.5 3.00195 19.7165 3.00195 18.75V18ZM8.50195 14C6.29281 14 4.50195 15.7909 4.50195 18V18.75C4.50195 18.8881 4.61388 19 4.75195 19H13.252C13.39 19 13.502 18.8881 13.502 18.75V18C13.502 15.7909 11.7111 14 9.50195 14H8.50195ZM17.252 13.5C16.8378 13.5 16.502 13.8358 16.502 14.25C16.502 14.6642 16.8378 15 17.252 15C19.4611 15 21.252 16.7909 21.252 19V19.25C21.252 19.3881 21.14 19.5 21.002 19.5H17.502C17.0878 19.5 16.752 19.8358 16.752 20.25C16.752 20.6642 17.0878 21 17.502 21H21.002C21.9685 21 22.752 20.2165 22.752 19.25V19C22.752 15.9624 20.2895 13.5 17.252 13.5Z" fill="currentColor"/></svg>',
+            'roles' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.25 9.75c0 5.942 4.064 10.933 9.563 12.348a.749.749 0 00.374 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 00-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08zm3.094 8.016a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" fill="currentColor"/></svg>',
         ];
 
         return $icons[$name] ?? $icons['dashboard'];

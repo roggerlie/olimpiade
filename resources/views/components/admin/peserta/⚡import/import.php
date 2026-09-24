@@ -20,6 +20,12 @@ new class extends Component
     /** @var array<int, string> */
     public array $importErrors = [];
 
+    /** @var array<int, string> */
+    public array $importNotes = [];
+
+    /** @var array<string, string> */
+    public array $generatedPasswords = [];
+
     /**
      * Drives the dropzone's "selected file" display. Server-tracked (not
      * client Alpine state) so it correctly clears when open() resets $file.
@@ -33,7 +39,7 @@ new class extends Component
     #[On('open-import-modal')]
     public function open(): void
     {
-        $this->reset(['file', 'imported', 'importErrors']);
+        $this->reset(['file', 'imported', 'importErrors', 'importNotes', 'generatedPasswords']);
         $this->resetErrorBag();
         $this->showModal = true;
     }
@@ -54,6 +60,8 @@ new class extends Component
 
         $this->imported = $importer->imported;
         $this->importErrors = $importer->errors;
+        $this->importNotes = $importer->notes;
+        $this->generatedPasswords = $importer->generatedPasswords;
         $this->file = null;
 
         if ($importer->imported > 0) {

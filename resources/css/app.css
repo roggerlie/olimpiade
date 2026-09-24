@@ -130,6 +130,98 @@
   --z-index-9999: 9999;
   --z-index-99999: 99999;
   --z-index-999999: 999999;
+
+  /* PBSF peserta login (auth/login-peserta.blade.php + components/auth/*):
+     the Gold / Biru / Hijau Hujan palette as fixed hex tokens, so the page
+     looks identical whether or not the `dark` class is on <html>. */
+  --color-pbsf-ink: #0d1530;
+  --color-pbsf-navy: #15224a;
+  --color-pbsf-blue: #2f6fed;
+  --color-pbsf-gold: #ffb930;
+  --color-pbsf-gold-light: #ffd069;
+  --color-pbsf-gold-deep: #f5a300;
+  --color-pbsf-rain: #2ba393;
+  --color-pbsf-rain-deep: #16826f;
+
+  --animate-pbsf-rain: pbsf-rain 1.6s linear infinite;
+  --animate-pbsf-fade-up: pbsf-fade-up .7s cubic-bezier(.2, .7, .2, 1) both;
+  --animate-pbsf-orb-a: pbsf-orb-a 16s ease-in-out infinite;
+  --animate-pbsf-orb-b: pbsf-orb-b 18s ease-in-out infinite;
+  --animate-pbsf-orb-c: pbsf-orb-a 20s ease-in-out infinite reverse;
+  --animate-pbsf-float: pbsf-float 6s ease-in-out infinite;
+
+  @keyframes pbsf-orb-a {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(40px, 30px) scale(1.12); }
+  }
+  @keyframes pbsf-orb-b {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-50px, -20px) scale(1.08); }
+  }
+  @keyframes pbsf-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes pbsf-rain {
+    0% { transform: translateY(-30vh); }
+    100% { transform: translateY(130vh); }
+  }
+  @keyframes pbsf-fade-up {
+    0% { opacity: 0; transform: translateY(16px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/*
+ * Peserta-only light-mode palette — Gold / Biru / Hijau Hujan. Scoped to
+ * .cbt-theme (see components/layouts/cbt.blade.php, and the `bodyClass`
+ * prop on components/layouts/guest.blade.php used by the peserta login
+ * page) so only the peserta-facing UI picks up the new look — the admin
+ * backoffice and dark mode everywhere keep the original brand/success/
+ * warning scale untouched. `error-*` is deliberately left alone in both
+ * modes: it's still red, used for genuine danger signals (time almost up,
+ * wrong-answer counts, error alerts), and wasn't one of the 3 requested
+ * colors.
+ */
+.cbt-theme:not(.dark) {
+  --color-brand-25: #f5f9ff;
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #2f6fed;
+  --color-brand-600: #2354c9;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e3f9e;
+  --color-brand-900: #1c356f;
+  --color-brand-950: #142449;
+
+  --color-success-25: #f2fbfa;
+  --color-success-50: #e0f6f2;
+  --color-success-100: #b8ebe1;
+  --color-success-200: #86dbcc;
+  --color-success-300: #52c2ae;
+  --color-success-400: #2ba393;
+  --color-success-500: #16826f;
+  --color-success-600: #10685a;
+  --color-success-700: #105348;
+  --color-success-800: #10423a;
+  --color-success-900: #0f3630;
+  --color-success-950: #051e1a;
+
+  --color-warning-25: #fffaf0;
+  --color-warning-50: #fff3d6;
+  --color-warning-100: #ffe4a3;
+  --color-warning-200: #ffd069;
+  --color-warning-300: #ffb930;
+  --color-warning-400: #f5a300;
+  --color-warning-500: #d68a00;
+  --color-warning-600: #ad6f00;
+  --color-warning-700: #855600;
+  --color-warning-800: #664300;
+  --color-warning-900: #4a3100;
+  --color-warning-950: #2b1c00;
 }
 
 /*

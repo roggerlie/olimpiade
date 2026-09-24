@@ -34,6 +34,8 @@
                         <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Nama</th>
                         <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Jenjang</th>
                         <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Asal Sekolah</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Password</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Lomba</th>
                         <th class="px-5 py-3 text-right text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Aksi</th>
                     </tr>
                 </thead>
@@ -44,16 +46,27 @@
                             <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $peserta->nama }}</td>
                             <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $peserta->jenjang->nama }}</td>
                             <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $peserta->asal_sekolah }}</td>
+                            <td class="px-5 py-3 font-mono text-sm text-gray-700 dark:text-gray-300">{{ $peserta->password_plain ?? '—' }}</td>
+                            <td class="px-5 py-3 text-sm">
+                                <div class="flex flex-wrap gap-1">
+                                    @forelse ($peserta->pelajaranLomba as $pelajaran)
+                                        <x-ui.badge color="light" size="sm">{{ $pelajaran->nama }}</x-ui.badge>
+                                    @empty
+                                        <span class="text-gray-400">—</span>
+                                    @endforelse
+                                </div>
+                            </td>
                             <td class="px-5 py-3 text-right text-sm">
                                 <x-common.table-actions>
                                     <x-common.dropdown-item wire:click="edit({{ $peserta->id }})">Ubah</x-common.dropdown-item>
+                                    <x-common.dropdown-item wire:click="resetPassword({{ $peserta->id }})" wire:confirm="Reset password {{ $peserta->nama }} ke No. Registrasi-nya ({{ $peserta->noreg }})?">Reset Password</x-common.dropdown-item>
                                     <x-common.dropdown-item danger wire:click="delete({{ $peserta->id }})" wire:confirm="Yakin ingin menghapus peserta ini? Akun login &amp; riwayat ujiannya ikut terhapus.">Hapus</x-common.dropdown-item>
                                 </x-common.table-actions>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-5 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                            <td colspan="7" class="px-5 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
                                 Belum ada peserta.
                             </td>
                         </tr>
@@ -75,8 +88,8 @@
 
             <div class="space-y-4">
                 <div>
-                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">No. Registrasi (7 digit, dipakai untuk login)</label>
-                    <input type="text" wire:model="noreg" maxlength="7"
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">No. Registrasi / NISN (10 digit, dipakai untuk login)</label>
+                    <input type="text" wire:model="noreg" maxlength="10"
                         class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
                     @error('noreg') <p class="mt-1 text-sm text-error-500">{{ $message }}</p> @enderror
                 </div>
@@ -112,6 +125,21 @@
                     <input type="password" wire:model="password"
                         class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
                     @error('password') <p class="mt-1 text-sm text-error-500">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                        Ikut Lomba <span class="font-normal text-gray-400">(boleh belum ada ujiannya)</span>
+                    </label>
+                    <div class="flex flex-wrap gap-x-4 gap-y-2">
+                        @foreach ($this->pelajaranPilihan as $pelajaran)
+                            <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                <input type="checkbox" wire:model="pelajaranLombaIds" value="{{ $pelajaran->id }}"
+                                    class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-white/5" />
+                                {{ $pelajaran->nama }}
+                            </label>
+                        @endforeach
+                    </div>
                 </div>
             </div>
 

@@ -1,4 +1,4 @@
-@props(['title' => 'Login'])
+@props(['title' => 'Login', 'bodyClass' => '', 'themeToggle' => true])
 
 <!DOCTYPE html>
 <html lang="id" class="h-full">
@@ -14,9 +14,10 @@
     @include('partials.theme-scripts')
 </head>
 
-<body class="dark:bg-gray-900" x-data>
+<body class="dark:bg-gray-900 {{ $bodyClass }}" x-data>
     {{ $slot }}
 
+    @if ($themeToggle)
     {{-- Theme toggle — ported from tailadmin's auth signin page. Guest pages
     (login, error pages) have no header, so this is the only way to flip
     themes here. --}}
@@ -32,6 +33,7 @@
             </svg>
         </button>
     </div>
+    @endif
 </body>
 
 </html>

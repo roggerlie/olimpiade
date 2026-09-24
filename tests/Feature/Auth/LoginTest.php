@@ -1,13 +1,17 @@
 <?php
 
+use App\Models\Jenjang;
+use App\Models\Pelajaran;
+use App\Models\Peserta;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    collect(['administrator', 'admin', 'operator', 'peserta'])->each(fn (string $role) => Role::findOrCreate($role, 'web'));
+    collect(['administrator', 'admin', 'operator'])->each(fn (string $role) => Role::findOrCreate($role, 'web'));
 });
 
 test('an admin can log in through the admin form and reach the admin dashboard', function () {
@@ -49,30 +53,28 @@ test('an operator can log in through the admin form and reach the admin dashboar
     $this->assertAuthenticatedAs($operator);
 });
 
-test('a student can log in through the student form and reach the cbt dashboard', function () {
-    $peserta = User::factory()->create(['username' => 'peserta1']);
-    $peserta->assignRole('peserta');
+test('a student can log in through the student form (using their noreg) and reach the cbt dashboard', function () {
+    $peserta = Peserta::factory()->create(['noreg' => '1000000001', 'password' => Hash::make('password')]);
 
     $response = $this->post(route('login'), [
-        'username' => 'peserta1',
+        'username' => '1000000001',
         'password' => 'password',
     ]);
 
     $response->assertRedirect(route('cbt.dashboard'));
-    $this->assertAuthenticatedAs($peserta);
+    $this->assertAuthenticatedAs($peserta, 'peserta');
 });
 
 test('a student cannot log in through the admin form', function () {
-    $peserta = User::factory()->create(['username' => 'peserta2']);
-    $peserta->assignRole('peserta');
+    Peserta::factory()->create(['noreg' => '1000000002', 'password' => Hash::make('password')]);
 
     $response = $this->post(route('admin.login'), [
-        'username' => 'peserta2',
+        'username' => '1000000002',
         'password' => 'password',
     ]);
 
     $response->assertSessionHasErrors('username');
-    $this->assertGuest();
+    $this->assertGuest('web');
 });
 
 test('an admin cannot log in through the student form', function () {
@@ -85,19 +87,19 @@ test('an admin cannot log in through the student form', function () {
     ]);
 
     $response->assertSessionHasErrors('username');
-    $this->assertGuest();
+    $this->assertGuest('peserta');
 });
 
 test('wrong credentials are rejected', function () {
-    User::factory()->create(['username' => 'someone'])->assignRole('peserta');
+    Peserta::factory()->create(['noreg' => '1000000003', 'password' => Hash::make('password')]);
 
     $response = $this->post(route('login'), [
-        'username' => 'someone',
+        'username' => '1000000003',
         'password' => 'wrong-password',
     ]);
 
     $response->assertSessionHasErrors('username');
-    $this->assertGuest();
+    $this->assertGuest('peserta');
 });
 
 test('a guest visiting an admin route is redirected to the admin login', function () {
@@ -113,5 +115,24 @@ test('a logged in admin can log out', function () {
     $admin->assignRole('admin');
 
     $this->actingAs($admin)->post(route('logout'))->assertRedirect(route('admin.login'));
-    $this->assertGuest();
+    $this->assertGuest('web');
+});
+
+test('a logged in peserta can log out', function () {
+    actingAsPeserta();
+
+    $this->post(route('logout'))->assertRedirect(route('login'));
+    $this->assertGuest('peserta');
+});
+
+test('the student login page lists every pelajaran as a cabang lomba open to every jenjang', function () {
+    Pelajaran::factory()->create(['nama' => 'Matematika']);
+    Pelajaran::factory()->create(['nama' => 'Astronomi']);
+    Jenjang::factory()->create(['kode' => '01', 'nama' => 'SD']);
+    Jenjang::factory()->create(['kode' => '02', 'nama' => 'SLTP']);
+
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertSeeInOrder(['Olimpiade Matematika', 'Logika, aljabar &amp; pemecahan masalah', 'SD', 'SLTP'], false)
+        ->assertSeeInOrder(['Olimpiade Astronomi', 'SD', 'SLTP']);
 });

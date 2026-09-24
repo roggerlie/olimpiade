@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\Jenjang;
+use App\Models\Pelajaran;
 use App\Models\Peserta;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
@@ -12,11 +12,11 @@ uses(RefreshDatabase::class);
 test('it lists existing peserta with their jenjang', function () {
     actingAsAdmin();
     $jenjang = Jenjang::factory()->create(['nama' => 'Sekolah Dasar']);
-    Peserta::factory()->create(['jenjang_id' => $jenjang->id, 'nama' => 'Budi', 'noreg' => '1000001']);
+    Peserta::factory()->create(['jenjang_id' => $jenjang->id, 'nama' => 'Budi', 'noreg' => '1000000001']);
 
     Livewire::test('admin.peserta.manager')
         ->assertSee('Budi')
-        ->assertSee('1000001')
+        ->assertSee('1000000001')
         ->assertSee('Sekolah Dasar');
 });
 
@@ -31,13 +31,13 @@ test('it validates required fields before creating', function () {
     expect(Peserta::count())->toBe(0);
 });
 
-test('it creates a peserta with a matching login account', function () {
+test('it creates a peserta with a working login', function () {
     actingAsAdmin();
     $jenjang = Jenjang::factory()->create();
 
     Livewire::test('admin.peserta.manager')
         ->call('create')
-        ->set('noreg', '1000001')
+        ->set('noreg', '1000000001')
         ->set('nama', 'Budi Santoso')
         ->set('jenjangId', $jenjang->id)
         ->set('asalSekolah', 'SD Contoh')
@@ -46,24 +46,58 @@ test('it creates a peserta with a matching login account', function () {
         ->assertHasNoErrors()
         ->assertSet('showModal', false);
 
-    $peserta = Peserta::where('noreg', '1000001')->first();
-    expect($peserta)->not->toBeNull();
+    $peserta = Peserta::where('noreg', '1000000001')->first();
+    expect($peserta)->not->toBeNull()
+        ->and(Hash::check('rahasia', $peserta->password))->toBeTrue();
+});
 
-    $user = User::where('username', '1000001')->first();
-    expect($user)->not->toBeNull()
-        ->and($user->hasRole('peserta'))->toBeTrue()
-        ->and($peserta->user_id)->toBe($user->id)
-        ->and(Hash::check('rahasia', $user->password))->toBeTrue();
+test('it records minat lomba (checked pelajaran) when creating a peserta', function () {
+    actingAsAdmin();
+    $jenjang = Jenjang::factory()->create();
+    $matematika = Pelajaran::factory()->create(['nama' => 'Matematika']);
+    $sains = Pelajaran::factory()->create(['nama' => 'Sains']);
+
+    Livewire::test('admin.peserta.manager')
+        ->call('create')
+        ->set('noreg', '1000000001')
+        ->set('nama', 'Budi Santoso')
+        ->set('jenjangId', $jenjang->id)
+        ->set('asalSekolah', 'SD Contoh')
+        ->set('password', 'rahasia')
+        ->set('pelajaranLombaIds', [$matematika->id])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $peserta = Peserta::where('noreg', '1000000001')->first();
+    expect($peserta->pelajaranLomba->pluck('id')->all())->toBe([$matematika->id])
+        ->and($peserta->pelajaranLomba->pluck('id'))->not->toContain($sains->id);
+});
+
+test('editing a peserta prefills their minat lomba and syncs changes (including unchecking)', function () {
+    actingAsAdmin();
+    $matematika = Pelajaran::factory()->create(['nama' => 'Matematika']);
+    $sains = Pelajaran::factory()->create(['nama' => 'Sains']);
+    $peserta = Peserta::factory()->create();
+    $peserta->pelajaranLomba()->attach([$matematika->id, $sains->id]);
+
+    Livewire::test('admin.peserta.manager')
+        ->call('edit', $peserta->id)
+        ->assertSet('pelajaranLombaIds', fn ($ids) => in_array($matematika->id, $ids) && in_array($sains->id, $ids))
+        ->set('pelajaranLombaIds', [$sains->id])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($peserta->fresh()->pelajaranLomba->pluck('id')->all())->toBe([$sains->id]);
 });
 
 test('it rejects a duplicate noreg', function () {
     actingAsAdmin();
-    Peserta::factory()->create(['noreg' => '1000001']);
+    Peserta::factory()->create(['noreg' => '1000000001']);
     $jenjang = Jenjang::factory()->create();
 
     Livewire::test('admin.peserta.manager')
         ->call('create')
-        ->set('noreg', '1000001')
+        ->set('noreg', '1000000001')
         ->set('nama', 'Lain')
         ->set('jenjangId', $jenjang->id)
         ->set('asalSekolah', 'SD Lain')
@@ -89,29 +123,37 @@ test('it prefills and updates an existing peserta without requiring a new passwo
     expect($peserta->fresh()->nama)->toBe('Baru');
 });
 
-test('it updates the login username when noreg changes', function () {
+test('it updates the noreg used to log in', function () {
     actingAsAdmin();
-    $peserta = Peserta::factory()->create(['noreg' => '1000001']);
+    $peserta = Peserta::factory()->create(['noreg' => '1000000001']);
 
     Livewire::test('admin.peserta.manager')
         ->call('edit', $peserta->id)
-        ->set('noreg', '2000002')
+        ->set('noreg', '2000000002')
         ->call('save')
         ->assertHasNoErrors();
 
-    expect($peserta->fresh()->noreg)->toBe('2000002')
-        ->and($peserta->user->fresh()->username)->toBe('2000002');
+    expect($peserta->fresh()->noreg)->toBe('2000000002');
 });
 
-test('deleting a peserta also removes their login account', function () {
+test('resetting a peserta password sets it back to their noreg', function () {
+    actingAsAdmin();
+    $peserta = Peserta::factory()->create(['noreg' => '1000000001', 'password' => Hash::make('rahasia-lama')]);
+
+    Livewire::test('admin.peserta.manager')
+        ->call('resetPassword', $peserta->id)
+        ->assertSet('errorMessage', null);
+
+    expect(Hash::check('1000000001', $peserta->fresh()->password))->toBeTrue();
+});
+
+test('deleting a peserta removes their login account', function () {
     actingAsAdmin();
     $peserta = Peserta::factory()->create();
-    $userId = $peserta->user_id;
 
     Livewire::test('admin.peserta.manager')->call('delete', $peserta->id);
 
-    expect(Peserta::find($peserta->id))->toBeNull()
-        ->and(User::find($userId))->toBeNull();
+    expect(Peserta::find($peserta->id))->toBeNull();
 });
 
 test('the list paginates with the app-styled pagination view', function () {

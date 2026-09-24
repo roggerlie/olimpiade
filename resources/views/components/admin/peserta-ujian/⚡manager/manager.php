@@ -66,15 +66,23 @@ new class extends Component
         return PesertaUjian::query()->where('ujian_id', $this->ujianId)->count();
     }
 
-    public function daftarkanSemua(): void
+    /**
+     * Only registers peserta who declared interest in this ujian's mapel
+     * ("minat lomba", see App\Models\Peserta::pelajaranLomba()) — e.g.
+     * flagged via the osains/omtk/obing columns on import, or the "Ikut
+     * Lomba" checkboxes on Kelola Peserta — but were never registered
+     * because this Ujian didn't exist yet at the time.
+     */
+    public function daftarkanYangBerminat(): void
     {
-        $pesertaBelumTerdaftar = Peserta::query()
+        $pesertaBerminat = Peserta::query()
             ->where('jenjang_id', $this->ujian->jenjang_id)
+            ->whereHas('pelajaranLomba', fn ($q) => $q->where('pelajaran.id', $this->ujian->pelajaran_id))
             ->whereDoesntHave('pesertaUjian', fn ($q) => $q->where('ujian_id', $this->ujianId))
             ->get(['id']);
 
-        DB::transaction(function () use ($pesertaBelumTerdaftar): void {
-            foreach ($pesertaBelumTerdaftar as $peserta) {
+        DB::transaction(function () use ($pesertaBerminat): void {
+            foreach ($pesertaBerminat as $peserta) {
                 PesertaUjian::create([
                     'peserta_id' => $peserta->id,
                     'ujian_id' => $this->ujianId,
@@ -82,7 +90,7 @@ new class extends Component
             }
         });
 
-        $this->statusMessage = "{$pesertaBelumTerdaftar->count()} peserta baru didaftarkan.";
+        $this->statusMessage = "{$pesertaBerminat->count()} peserta yang berminat didaftarkan.";
         $this->errorMessage = null;
         $this->refreshLists();
     }

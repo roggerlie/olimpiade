@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Peserta;
 use App\Models\User;
 
 return [
@@ -42,6 +43,17 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Admin (`web`) and peserta are fully separate account tables now —
+        // this guard is what makes "logged in as a peserta" and "logged in
+        // as an admin" mutually independent, so the same browser session
+        // could technically hold both at once (harmless: the two areas
+        // never share UI). See App\Models\Peserta and
+        // App\Http\Controllers\Auth\AuthenticatedSessionController.
+        'peserta' => [
+            'driver' => 'session',
+            'provider' => 'peserta',
+        ],
     ],
 
     /*
@@ -65,6 +77,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'peserta' => [
+            'driver' => 'eloquent',
+            'model' => Peserta::class,
         ],
 
         // 'users' => [

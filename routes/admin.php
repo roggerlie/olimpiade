@@ -108,3 +108,11 @@ Route::middleware('permission:kartu-peserta.print')->group(function (): void {
 Route::middleware('permission:users.manage')->group(function (): void {
     Route::view('users', 'admin.users.index')->name('users.index');
 });
+
+// Deliberately gated by role, not a Spatie permission: who's allowed to
+// edit what each role can do must never be something a role could grant
+// itself. Only `administrator` (which already bypasses every permission
+// check) can reach this.
+Route::middleware('role:administrator')->group(function (): void {
+    Route::view('roles', 'admin.roles.index')->name('roles.index');
+});

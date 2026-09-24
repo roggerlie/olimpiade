@@ -53,9 +53,15 @@
                                 <p class="mt-0.5 text-xs text-gray-500">{{ $s->asal_sekolah }}</p>
                             </div>
 
-                            <div class="mt-2 rounded-lg bg-gray-50 px-3 py-2">
-                                <p class="text-[9px] uppercase tracking-wide text-gray-400">No. Registrasi (Username Login)</p>
-                                <p class="font-mono text-xl font-bold tracking-[0.2em] text-gray-800">{{ $s->noreg }}</p>
+                            <div class="mt-2 grid grid-cols-2 gap-1.5">
+                                <div class="rounded-lg bg-gray-50 px-2.5 py-2">
+                                    <p class="text-[8px] uppercase tracking-wide text-gray-400">No. Registrasi (NISN)</p>
+                                    <p class="font-mono text-sm font-bold tracking-wider text-gray-800">{{ $s->noreg }}</p>
+                                </div>
+                                <div class="rounded-lg bg-gray-50 px-2.5 py-2">
+                                    <p class="text-[8px] uppercase tracking-wide text-gray-400">Password</p>
+                                    <p class="font-mono text-sm font-bold tracking-wider text-gray-800">{{ $s->password_plain ?? '—' }}</p>
+                                </div>
                             </div>
                         </div>
 

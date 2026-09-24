@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
@@ -15,11 +16,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         then: function (): void {
             Route::middleware('web')->group(__DIR__.'/../routes/auth.php');
-            Route::middleware(['web', 'auth', 'role:administrator|admin|operator'])
+            Route::middleware(['web', 'auth:web', 'role:administrator|admin|operator'])
                 ->prefix('admin')
                 ->name('admin.')
                 ->group(__DIR__.'/../routes/admin.php');
-            Route::middleware(['web', 'auth', 'role:peserta'])
+            // Peserta are their own guard/table now (see config/auth.php,
+            // App\Models\Peserta) — membership in the `peserta` guard is
+            // what gates these routes, no Spatie role check needed anymore.
+            Route::middleware(['web', 'auth:peserta'])
                 ->name('cbt.')
                 ->group(__DIR__.'/../routes/cbt.php');
         },
@@ -33,12 +37,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // Two guests, two homes: an unauthenticated visit to /admin/* belongs
         // at the admin login, everything else at the student login. Likewise
         // an already-authenticated user hitting a guest route (e.g. revisiting
-        // /login) lands on the dashboard for their own role.
+        // /login) lands on the dashboard for their own guard.
         $middleware->redirectGuestsTo(
             fn (Request $request) => $request->is('admin/*') ? route('admin.login') : route('login')
         );
         $middleware->redirectUsersTo(
-            fn (Request $request) => $request->user()?->hasAnyRole(['administrator', 'admin', 'operator'])
+            fn (Request $request) => Auth::guard('web')->check()
                 ? route('admin.dashboard')
                 : route('cbt.dashboard')
         );

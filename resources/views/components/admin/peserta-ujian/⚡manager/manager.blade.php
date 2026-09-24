@@ -13,8 +13,8 @@
                 <x-ui.button variant="outline" wire:click="resetSemua" wire:confirm="Reset progres SEMUA peserta yang sudah mulai mengerjakan ujian ini? Jawaban &amp; waktu mereka akan dihapus.">
                     Reset Semua Progres
                 </x-ui.button>
-                <x-ui.button wire:click="daftarkanSemua" wire:confirm="Daftarkan semua peserta jenjang {{ $this->ujian->jenjang->nama }} yang belum terdaftar ke ujian ini?">
-                    Daftarkan Semua Peserta {{ $this->ujian->jenjang->nama }}
+                <x-ui.button wire:click="daftarkanYangBerminat" wire:confirm="Daftarkan peserta jenjang {{ $this->ujian->jenjang->nama }} yang sudah menyatakan minat lomba {{ $this->ujian->pelajaran->nama }} tapi belum terdaftar ke ujian ini?">
+                    Daftarkan Peserta yang Berminat
                 </x-ui.button>
             </div>
         </div>

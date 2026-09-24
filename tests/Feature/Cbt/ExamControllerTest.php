@@ -37,6 +37,44 @@ test('dashboard only lists the logged-in peserta own ujian', function () {
         ->assertDontSee($ujianOrangLain->nama);
 });
 
+test('petunjuk shows the scoring rule for an attempt not yet started', function () {
+    $peserta = actingAsPeserta();
+    $ujian = ujianDenganSoal(3);
+    $pesertaUjian = PesertaUjian::factory()->create(['peserta_id' => $peserta->id, 'ujian_id' => $ujian->id]);
+
+    $this->get(route('cbt.ujian.petunjuk', $pesertaUjian))
+        ->assertOk()
+        ->assertSee('Skor +9')
+        ->assertSee('Skor -1');
+});
+
+test('petunjuk redirects to kerjakan when the attempt is already started', function () {
+    $peserta = actingAsPeserta();
+    $ujian = ujianDenganSoal(2);
+    $pesertaUjian = PesertaUjian::factory()->create(['peserta_id' => $peserta->id, 'ujian_id' => $ujian->id, 'waktu_mulai' => now()]);
+
+    $this->get(route('cbt.ujian.petunjuk', $pesertaUjian))
+        ->assertRedirect(route('cbt.ujian.kerjakan', $pesertaUjian));
+});
+
+test('petunjuk redirects to hasil when the attempt is already submitted', function () {
+    $peserta = actingAsPeserta();
+    $ujian = ujianDenganSoal(2);
+    $pesertaUjian = PesertaUjian::factory()->selesai()->create(['peserta_id' => $peserta->id, 'ujian_id' => $ujian->id]);
+
+    $this->get(route('cbt.ujian.petunjuk', $pesertaUjian))
+        ->assertRedirect(route('cbt.ujian.hasil', $pesertaUjian));
+});
+
+test('petunjuk redirects to dashboard outside the exam session window', function () {
+    $peserta = actingAsPeserta();
+    $ujian = ujianDenganSoal(2, ['sesi_mulai' => now()->addDay(), 'sesi_selesai' => now()->addDay()->addHours(2)]);
+    $pesertaUjian = PesertaUjian::factory()->create(['peserta_id' => $peserta->id, 'ujian_id' => $ujian->id]);
+
+    $this->get(route('cbt.ujian.petunjuk', $pesertaUjian))
+        ->assertRedirect(route('cbt.dashboard'));
+});
+
 test('mulai starts the attempt and redirects to kerjakan', function () {
     $peserta = actingAsPeserta();
     $ujian = ujianDenganSoal(3);
@@ -73,6 +111,7 @@ test('a peserta cannot mulai, kerjakan, or lihat hasil of another peserta attemp
     $ujian = ujianDenganSoal(2);
     $pesertaUjianOrangLain = PesertaUjian::factory()->create(['ujian_id' => $ujian->id]);
 
+    $this->get(route('cbt.ujian.petunjuk', $pesertaUjianOrangLain))->assertForbidden();
     $this->post(route('cbt.ujian.mulai', $pesertaUjianOrangLain))->assertForbidden();
     $this->get(route('cbt.ujian.kerjakan', $pesertaUjianOrangLain))->assertForbidden();
     $this->get(route('cbt.ujian.hasil', $pesertaUjianOrangLain))->assertForbidden();

@@ -73,11 +73,15 @@ test('an administrator is allowed everything regardless of permissions', functio
 });
 
 test('a peserta cannot reach any admin route', function () {
+    // Not assertForbidden(): a peserta is on a completely separate guard now
+    // (see config/auth.php), so /admin/* sees them as simply not logged in
+    // there at all, not "logged in with the wrong role" — same redirect a
+    // plain guest gets.
     actingAsPeserta();
     $routes = adminRouteSample();
 
     foreach ($routes as $route) {
-        $this->get($route)->assertForbidden();
+        $this->get($route)->assertRedirect(route('admin.login'));
     }
 });
 

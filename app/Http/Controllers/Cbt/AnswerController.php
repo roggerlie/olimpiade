@@ -8,6 +8,7 @@ use App\Models\PesertaUjian;
 use App\Services\ScoringService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -20,7 +21,7 @@ class AnswerController extends Controller
 {
     public function simpan(Request $request, PesertaUjian $pesertaUjian): JsonResponse
     {
-        Gate::authorize('view', $pesertaUjian);
+        Gate::forUser(Auth::guard('peserta')->user())->authorize('view', $pesertaUjian);
 
         if ($pesertaUjian->sudahSubmit()) {
             return response()->json(['message' => 'Ujian sudah diselesaikan.'], 422);
@@ -47,7 +48,7 @@ class AnswerController extends Controller
 
     public function submit(PesertaUjian $pesertaUjian, ScoringService $scoring): JsonResponse
     {
-        Gate::authorize('view', $pesertaUjian);
+        Gate::forUser(Auth::guard('peserta')->user())->authorize('view', $pesertaUjian);
 
         if (! $pesertaUjian->sudahSubmit()) {
             $scoring->submit($pesertaUjian);

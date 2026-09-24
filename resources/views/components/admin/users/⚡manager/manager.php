@@ -28,6 +28,11 @@ new class extends Component
 
     public string $username = '';
 
+    // Optional — only needed to let this account use "Login dengan Google"
+    // on /admin/login (see App\Http\Controllers\Auth\GoogleAuthController).
+    // Unset, that login path simply won't find a match for this user.
+    public string $email = '';
+
     public string $password = '';
 
     public string $role = '';
@@ -87,6 +92,7 @@ new class extends Component
         $this->editingId = $user->id;
         $this->nama = $user->name;
         $this->username = $user->username;
+        $this->email = $user->email ?? '';
         $this->password = '';
         $this->role = $user->getRoleNames()->first() ?? '';
         $this->showModal = true;
@@ -99,6 +105,7 @@ new class extends Component
         $data = $this->validate([
             'nama' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($this->editingId)],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->editingId)],
             'password' => [$this->editingId ? 'nullable' : 'required', 'string', 'min:6'],
             'role' => ['required', Rule::in(array_keys(self::ROLES))],
         ]);
@@ -116,7 +123,13 @@ new class extends Component
                 'name' => $data['nama'],
                 'username' => $data['username'],
                 'password' => $data['password'] ? Hash::make($data['password']) : null,
-            ]));
+            ]) + [
+                // Not folded into the array_filter() above: unlike name/
+                // username/password, an empty value here is a real action
+                // (clearing the email un-links Google login for this
+                // account), not "leave unchanged".
+                'email' => $data['email'] ?: null,
+            ]);
             $user->syncRoles([$data['role']]);
 
             $this->statusMessage = 'Pengguna diperbarui.';
@@ -124,6 +137,7 @@ new class extends Component
             $user = User::create([
                 'name' => $data['nama'],
                 'username' => $data['username'],
+                'email' => $data['email'] ?: null,
                 'password' => Hash::make($data['password']),
             ]);
             $user->assignRole($data['role']);
@@ -179,7 +193,7 @@ new class extends Component
 
     private function resetForm(): void
     {
-        $this->reset(['editingId', 'nama', 'username', 'password', 'role']);
+        $this->reset(['editingId', 'nama', 'username', 'email', 'password', 'role']);
         $this->resetErrorBag();
     }
 };

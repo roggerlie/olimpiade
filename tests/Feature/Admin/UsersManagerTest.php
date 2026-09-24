@@ -8,22 +8,23 @@ use Livewire\Livewire;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    // actingAsAdmin() only seeds `administrator`/`peserta`; this manager
-    // also assigns `admin`/`operator`, so make sure every /admin role exists.
+    // actingAsAdmin() only seeds `administrator`; this manager also assigns
+    // `admin`/`operator`, so make sure every /admin role exists.
     (new PermissionSeeder)->run();
 });
 
-test('it lists existing admin-tier users but not peserta accounts', function () {
+test('it lists existing admin-tier users but not roleless accounts', function () {
     $admin = actingAsAdmin();
     $operator = User::factory()->create(['name' => 'Budi Operator']);
     $operator->assignRole('operator');
-    $peserta = User::factory()->create(['name' => 'Citra Peserta']);
-    $peserta->assignRole('peserta');
+    // Peserta aren't `users` rows at all anymore (see App\Models\Peserta) —
+    // this just covers a stray user with no admin-tier role.
+    User::factory()->create(['name' => 'Citra Tanpa Role']);
 
     Livewire::test('admin.users.manager')
         ->assertSee($admin->name)
         ->assertSee('Budi Operator')
-        ->assertDontSee('Citra Peserta');
+        ->assertDontSee('Citra Tanpa Role');
 });
 
 test('it validates required fields before creating', function () {
@@ -53,6 +54,52 @@ test('it creates a new user with the chosen role', function () {
     $user = User::where('username', 'budi.operator')->first();
     expect($user)->not->toBeNull()
         ->and($user->hasRole('operator'))->toBeTrue();
+});
+
+test('it creates a user with an optional email, for later Google login linking', function () {
+    actingAsAdmin();
+
+    Livewire::test('admin.users.manager')
+        ->call('create')
+        ->set('nama', 'Budi Operator')
+        ->set('username', 'budi.operator')
+        ->set('email', 'budi@sekolah.test')
+        ->set('password', 'password')
+        ->set('role', 'operator')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(User::where('username', 'budi.operator')->first()?->email)->toBe('budi@sekolah.test');
+});
+
+test('it creates a user without an email just fine', function () {
+    actingAsAdmin();
+
+    Livewire::test('admin.users.manager')
+        ->call('create')
+        ->set('nama', 'Budi Operator')
+        ->set('username', 'budi.operator')
+        ->set('password', 'password')
+        ->set('role', 'operator')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(User::where('username', 'budi.operator')->first()?->email)->toBeNull();
+});
+
+test('it rejects a duplicate email', function () {
+    actingAsAdmin();
+    User::factory()->create(['email' => 'taken@sekolah.test']);
+
+    Livewire::test('admin.users.manager')
+        ->call('create')
+        ->set('nama', 'Budi')
+        ->set('username', 'budi')
+        ->set('email', 'taken@sekolah.test')
+        ->set('password', 'password')
+        ->set('role', 'operator')
+        ->call('save')
+        ->assertHasErrors(['email']);
 });
 
 test('it rejects a duplicate username', function () {
