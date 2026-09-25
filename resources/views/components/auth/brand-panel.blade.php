@@ -64,8 +64,8 @@
                 </div>
 
                 @foreach ($lomba as $l)
-                    <div class="group flex animate-pbsf-fade-up items-center gap-4 rounded-2xl border border-white/10 bg-white/[.05] px-4 py-3.5 backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-pbsf-gold/30 hover:bg-white/[.08] motion-reduce:animate-none 2xl:gap-5 2xl:px-5 2xl:py-4"
-                        style="animation-delay: {{ 0.25 + $loop->index * 0.08 }}s">
+                    <div class="animate-pbsf-fade-up motion-reduce:animate-none" style="animation-delay: {{ 0.25 + $loop->index * 0.08 }}s">
+                    <div class="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[.05] px-4 py-3.5 backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-pbsf-gold/30 hover:bg-white/[.08] 2xl:gap-5 2xl:px-5 2xl:py-4">
                         <div class="flex size-12 flex-none items-center justify-center rounded-xl bg-linear-to-br text-xl font-extrabold shadow-lg transition group-hover:scale-105 2xl:size-14 2xl:text-2xl {{ $l['iconStyle'] }}">
                             {{ $l['icon'] }}
                         </div>
@@ -80,6 +80,7 @@
                                 <span class="rounded-lg border border-white/10 bg-white/[.07] px-2.5 py-1 text-xs font-semibold text-[#e7ecfa]">{{ $j }}</span>
                             @endforeach
                         </div>
+                    </div>
                     </div>
                 @endforeach
             </div>

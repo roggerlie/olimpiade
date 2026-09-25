@@ -1,160 +1,160 @@
 @php
-    // A small, stable set of badge colors cycled by pelajaran id, so the same
-    // subject always reads the same color across cards without needing a
-    // dedicated "warna" column on Pelajaran.
-    $warnaMapel = fn (int $pelajaranId) => ['primary', 'success', 'warning'][$pelajaranId % 3];
+    // A small, stable set of Gold / Biru / Hijau Hujan chip colors cycled by
+    // pelajaran id, so the same subject always reads the same color across
+    // cards without needing a dedicated "warna" column on Pelajaran.
+    $warnaMapel = fn (int $pelajaranId) => [
+        ['chip' => 'border-pbsf-gold/30 bg-pbsf-gold/10 text-pbsf-gold-light', 'bar' => 'bg-pbsf-gold'],
+        ['chip' => 'border-pbsf-blue/40 bg-pbsf-blue/15 text-[#93c5fd]', 'bar' => 'bg-pbsf-blue'],
+        ['chip' => 'border-pbsf-rain/40 bg-pbsf-rain/15 text-[#86dbcc]', 'bar' => 'bg-pbsf-rain'],
+    ][$pelajaranId % 3];
+
+    $jadwal = fn ($ujian) => $ujian->sesi_mulai->translatedFormat('d M Y, H:i').' – '.$ujian->sesi_selesai->translatedFormat('H:i');
 @endphp
 
 <x-layouts.cbt title="Dashboard">
-    {{-- Hero greeting banner --}}
-    <div class="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 p-6 text-white shadow-theme-lg">
-        <div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10"></div>
-        <div class="absolute -bottom-14 right-16 h-28 w-28 rounded-full bg-white/10"></div>
+    {{-- Hero greeting --}}
+    <div class="pbsf-glass relative mb-6 animate-pbsf-fade-up overflow-hidden p-6 motion-reduce:animate-none md:p-8">
+        <div class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-pbsf-gold via-pbsf-blue to-pbsf-rain"></div>
+        <div class="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-pbsf-gold/15 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-28 left-1/3 size-72 rounded-full bg-pbsf-rain/10 blur-3xl"></div>
 
-        <div class="relative flex flex-wrap items-center gap-4">
-            <div class="rounded-full ring-4 ring-white/25">
-                <x-ui.avatar :name="$peserta->nama" size="xlarge" />
-            </div>
-            <div>
-                <h1 class="text-lg font-semibold">Halo, {{ $peserta->nama }}</h1>
-                <div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-white/80">
-                    <span>No. Registrasi {{ $peserta->noreg }}</span>
-                    <span class="text-white/40">&middot;</span>
-                    <span class="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium">{{ $peserta->jenjang->nama }}</span>
+        <div class="relative flex flex-wrap items-center justify-between gap-6">
+            <div class="flex items-center gap-4">
+                <x-cbt.avatar :name="$peserta->nama" class="size-16 text-2xl ring-4 ring-pbsf-gold/25" />
+                <div>
+                    <p class="text-sm text-[#aab4d4]">Selamat datang di arena,</p>
+                    <h1 class="text-2xl font-bold md:text-3xl">Halo, <span class="text-pbsf-gold-light">{{ $peserta->nama }}</span></h1>
+                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs font-medium">
+                        <span class="rounded-full border border-white/15 bg-white/[.06] px-2.5 py-1 text-[#dfe5f5]">No. Registrasi {{ $peserta->noreg }}</span>
+                        <span class="rounded-full border border-pbsf-rain/40 bg-pbsf-rain/15 px-2.5 py-1 text-[#86dbcc]">{{ $peserta->jenjang->nama }}</span>
+                    </div>
                 </div>
             </div>
+
+            <img src="/images/pbsf/logo-pbsf-3d.webp" alt="" width="816" height="382"
+                class="hidden w-64 animate-pbsf-float drop-shadow-[0_14px_30px_rgba(0,0,0,.5)] motion-reduce:animate-none md:block lg:w-72" />
         </div>
     </div>
 
+    @if (session('error'))
+        <div role="alert" class="mb-6 rounded-xl border border-error-500/40 bg-error-500/10 px-4 py-3 text-sm text-error-200">
+            {{ session('error') }}
+        </div>
+    @endif
+
     {{-- Priority card: the one thing most worth acting on right now --}}
     @if ($prioritas)
-        <div class="mb-6 rounded-2xl border border-brand-200 bg-brand-50 p-5 dark:border-brand-500/30 dark:bg-brand-500/10">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex items-start gap-3">
-                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 3.25C7.16751 3.25 3.25 7.16751 3.25 12C3.25 16.8325 7.16751 20.75 12 20.75C16.8325 20.75 20.75 16.8325 20.75 12C20.75 7.16751 16.8325 3.25 12 3.25ZM1.75 12C1.75 6.33908 6.33908 1.75 12 1.75C17.6609 1.75 22.25 6.33908 22.25 12C22.25 17.6609 17.6609 22.25 12 22.25C6.33908 22.25 1.75 17.6609 1.75 12ZM12 6.25C12.4142 6.25 12.75 6.58579 12.75 7V11.6893L15.5303 14.4697C15.8232 14.7626 15.8232 15.2374 15.5303 15.5303C15.2374 15.8232 14.7626 15.8232 14.4697 15.5303L11.4697 12.5303C11.329 12.3896 11.25 12.1989 11.25 12V7C11.25 6.58579 11.5858 6.25 12 6.25Z" fill="currentColor" />
-                        </svg>
+        <div class="relative mb-6 animate-pbsf-fade-up rounded-2xl [animation-delay:.08s] motion-reduce:animate-none">
+            <div class="pbsf-glass animate-pbsf-glow border-pbsf-gold/40 bg-linear-to-br from-pbsf-gold/[.12] to-white/[.03] p-5 motion-reduce:animate-none md:p-6">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-start gap-4">
+                        <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-pbsf-gold-light to-pbsf-gold-deep text-pbsf-navy shadow-lg shadow-pbsf-gold/20">
+                            <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold tracking-[.12em] text-pbsf-gold uppercase">
+                                {{ $prioritas->waktu_mulai ? 'Sedang kamu kerjakan' : 'Perlu perhatianmu' }}
+                            </p>
+                            <p class="mt-1 text-lg font-bold">{{ $prioritas->ujian->nama }}</p>
+                            <p class="text-sm text-[#aab4d4]">{{ $jadwal($prioritas->ujian) }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-xs font-medium uppercase tracking-wide text-brand-600 dark:text-brand-400">
-                            {{ $prioritas->waktu_mulai ? 'Sedang kamu kerjakan' : 'Perlu perhatianmu' }}
-                        </p>
-                        <p class="mt-0.5 font-semibold text-gray-800 dark:text-white/90">{{ $prioritas->ujian->nama }}</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                            {{ $prioritas->ujian->sesi_mulai->translatedFormat('d M Y, H:i') }} &ndash; {{ $prioritas->ujian->sesi_selesai->translatedFormat('H:i') }}
-                        </p>
-                    </div>
-                </div>
 
-                @if ($prioritas->waktu_mulai)
-                    <a href="{{ route('cbt.ujian.kerjakan', $prioritas) }}"
-                        class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600">
-                        Lanjutkan
-                    </a>
-                @elseif ($prioritas->ujian->sesiSedangBerlangsung())
-                    <a href="{{ route('cbt.ujian.petunjuk', $prioritas) }}"
-                        class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600">
-                        Mulai Ujian
-                    </a>
-                @else
-                    <x-ui.badge color="light">Belum Dibuka</x-ui.badge>
-                @endif
+                    @if ($prioritas->waktu_mulai)
+                        <a href="{{ route('cbt.ujian.kerjakan', $prioritas) }}" class="pbsf-btn-gold px-6">Lanjutkan &rarr;</a>
+                    @elseif ($prioritas->ujian->sesiSedangBerlangsung())
+                        <a href="{{ route('cbt.ujian.petunjuk', $prioritas) }}" class="pbsf-btn-gold px-6">Mulai Ujian &rarr;</a>
+                    @else
+                        <span class="rounded-full border border-white/15 bg-white/[.06] px-3 py-1.5 text-xs font-semibold text-[#aab4d4]">Belum Dibuka</span>
+                    @endif
+                </div>
             </div>
         </div>
     @endif
 
     {{-- Summary stat cards --}}
-    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-500 dark:bg-brand-500/15 dark:text-brand-400">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C8.41421 2 8.75 2.33579 8.75 2.75V3.75H15.25V2.75C15.25 2.33579 15.5858 2 16 2C16.4142 2 16.75 2.33579 16.75 2.75V3.75H18.5C19.7426 3.75 20.75 4.75736 20.75 6V9V19C20.75 20.2426 19.7426 21.25 18.5 21.25H5.5C4.25736 21.25 3.25 20.2426 3.25 19V9V6C3.25 4.75736 4.25736 3.75 5.5 3.75H7.25V2.75C7.25 2.33579 7.58579 2 8 2ZM8 5.25H5.5C5.08579 5.25 4.75 5.58579 4.75 6V8.25H19.25V6C19.25 5.58579 18.9142 5.25 18.5 5.25H16H8ZM19.25 9.75H4.75V19C4.75 19.4142 5.08579 19.75 5.5 19.75H18.5C18.9142 19.75 19.25 19.4142 19.25 19V9.75Z" fill="currentColor" />
-                </svg>
+    @php
+        $statCards = [
+            ['label' => 'Total Ujian', 'value' => $statistik['total'], 'icon' => 'from-pbsf-blue to-[#1d4ed8] text-white', 'path' => '<rect x="4" y="5" width="16" height="16" rx="2" /><path d="M16 3v4M8 3v4M4 11h16" />'],
+            ['label' => 'Selesai', 'value' => $statistik['selesai'], 'icon' => 'from-pbsf-rain to-pbsf-rain-deep text-white', 'path' => '<path d="m5 12 5 5L20 7" />'],
+            ['label' => 'Belum Selesai', 'value' => $statistik['belumSelesai'], 'icon' => 'from-pbsf-gold-light to-pbsf-gold-deep text-pbsf-navy', 'path' => '<circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" />'],
+        ];
+    @endphp
+    <div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        @foreach ($statCards as $card)
+            <div class="pbsf-glass flex animate-pbsf-fade-up items-center gap-4 p-5 motion-reduce:animate-none" style="animation-delay: {{ 0.12 + $loop->index * 0.06 }}s">
+                <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-lg {{ $card['icon'] }}">
+                    <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $card['path'] !!}</svg>
+                </div>
+                <div>
+                    <p class="text-sm text-[#aab4d4]">{{ $card['label'] }}</p>
+                    <p class="text-3xl leading-tight font-bold">{{ $card['value'] }}</p>
+                </div>
             </div>
-            <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Total Ujian</p>
-            <h4 class="mt-1 text-title-sm font-bold text-gray-800 dark:text-white/90">{{ $statistik['total'] }}</h4>
-        </div>
-
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M20.7071 5.29289C21.0976 5.68342 21.0976 6.31658 20.7071 6.70711L9.70711 17.7071C9.31658 18.0976 8.68342 18.0976 8.29289 17.7071L3.29289 12.7071C2.90237 12.3166 2.90237 11.6834 3.29289 11.2929C3.68342 10.9024 4.31658 10.9024 4.70711 11.2929L9 15.5858L19.2929 5.29289C19.6834 4.90237 20.3166 4.90237 20.7071 5.29289Z" fill="currentColor" />
-                </svg>
-            </div>
-            <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Selesai</p>
-            <h4 class="mt-1 text-title-sm font-bold text-gray-800 dark:text-white/90">{{ $statistik['selesai'] }}</h4>
-        </div>
-
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-orange-400">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12 3.25C7.16751 3.25 3.25 7.16751 3.25 12C3.25 16.8325 7.16751 20.75 12 20.75C16.8325 20.75 20.75 16.8325 20.75 12C20.75 7.16751 16.8325 3.25 12 3.25ZM1.75 12C1.75 6.33908 6.33908 1.75 12 1.75C17.6609 1.75 22.25 6.33908 22.25 12C22.25 17.6609 17.6609 22.25 12 22.25C6.33908 22.25 1.75 17.6609 1.75 12ZM12 6.25C12.4142 6.25 12.75 6.58579 12.75 7V11.6893L15.5303 14.4697C15.8232 14.7626 15.8232 15.2374 15.5303 15.5303C15.2374 15.8232 14.7626 15.8232 14.4697 15.5303L11.4697 12.5303C11.329 12.3896 11.25 12.1989 11.25 12V7C11.25 6.58579 11.5858 6.25 12 6.25Z" fill="currentColor" />
-                </svg>
-            </div>
-            <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Belum Selesai</p>
-            <h4 class="mt-1 text-title-sm font-bold text-gray-800 dark:text-white/90">{{ $statistik['belumSelesai'] }}</h4>
-        </div>
+        @endforeach
     </div>
-
-    @if (session('error'))
-        <x-ui.alert variant="error" class="mb-6">{{ session('error') }}</x-ui.alert>
-    @endif
 
     {{-- The priority card above already covers one ujian — no need to repeat it here. --}}
     @php $daftarUjian = $prioritas ? $pesertaUjian->reject(fn ($su) => $su->id === $prioritas->id) : $pesertaUjian; @endphp
 
+    @if ($pesertaUjian->isEmpty() || $daftarUjian->isNotEmpty())
+        <div class="mb-4 flex items-center gap-3 text-[13px] font-semibold tracking-[.14em] text-[#8e9acb] uppercase">
+            Daftar Ujian
+            <span class="h-px flex-1 bg-linear-to-r from-white/15 to-transparent"></span>
+        </div>
+    @endif
+
     @if ($pesertaUjian->isEmpty())
-        <h2 class="mb-4 text-base font-semibold text-gray-800 dark:text-white/90">Daftar Ujian</h2>
-        <div class="flex flex-col items-center rounded-2xl border border-gray-200 bg-white p-10 text-center dark:border-gray-800 dark:bg-white/[0.03]">
-            <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-gray-400 dark:bg-white/5 dark:text-gray-500">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C8.41421 2 8.75 2.33579 8.75 2.75V3.75H15.25V2.75C15.25 2.33579 15.5858 2 16 2C16.4142 2 16.75 2.33579 16.75 2.75V3.75H18.5C19.7426 3.75 20.75 4.75736 20.75 6V9V19C20.75 20.2426 19.7426 21.25 18.5 21.25H5.5C4.25736 21.25 3.25 20.2426 3.25 19V9V6C3.25 4.75736 4.25736 3.75 5.5 3.75H7.25V2.75C7.25 2.33579 7.58579 2 8 2ZM8 5.25H5.5C5.08579 5.25 4.75 5.58579 4.75 6V8.25H19.25V6C19.25 5.58579 18.9142 5.25 18.5 5.25H16H8ZM19.25 9.75H4.75V19C4.75 19.4142 5.08579 19.75 5.5 19.75H18.5C18.9142 19.75 19.25 19.4142 19.25 19V9.75Z" fill="currentColor" />
+        <div class="pbsf-glass flex flex-col items-center p-10 text-center">
+            <div class="mb-4 flex size-14 items-center justify-center rounded-full bg-white/[.06] text-[#8e9acb]">
+                <svg class="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="4" y="5" width="16" height="16" rx="2" /><path d="M16 3v4M8 3v4M4 11h16" />
                 </svg>
             </div>
-            <p class="font-medium text-gray-700 dark:text-gray-300">Belum ada ujian yang terdaftar</p>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Hubungi panitia jika kamu merasa ini keliru.</p>
+            <p class="font-semibold">Belum ada ujian yang terdaftar</p>
+            <p class="mt-1 text-sm text-[#aab4d4]">Hubungi panitia jika kamu merasa ini keliru.</p>
         </div>
     @elseif ($daftarUjian->isNotEmpty())
-        <h2 class="mb-4 text-base font-semibold text-gray-800 dark:text-white/90">Daftar Ujian</h2>
-        <div class="space-y-4">
+        <div class="space-y-3">
             @foreach ($daftarUjian as $su)
-                <div class="group rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-xs transition hover:shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03]">
-                    <div class="flex flex-wrap items-center justify-between gap-4">
+                @php $warna = $warnaMapel($su->ujian->pelajaran_id); @endphp
+                {{-- fade-up lives on a wrapper: its fill-mode would otherwise pin transform and cancel the hover lift --}}
+                <div class="animate-pbsf-fade-up motion-reduce:animate-none" style="animation-delay: {{ 0.2 + $loop->index * 0.05 }}s">
+                <div class="pbsf-glass group relative overflow-hidden p-5 transition duration-300 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[.07]">
+                    <div class="absolute inset-y-0 left-0 w-1 {{ $warna['bar'] }}"></div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-4 pl-2">
                         <div>
                             <div class="mb-1 flex flex-wrap items-center gap-2">
-                                <p class="font-semibold text-gray-800 dark:text-white/90">{{ $su->ujian->nama }}</p>
-                                <x-ui.badge :color="$warnaMapel($su->ujian->pelajaran_id)" size="sm">{{ $su->ujian->pelajaran->nama }}</x-ui.badge>
+                                <p class="font-bold">{{ $su->ujian->nama }}</p>
+                                <span class="rounded-full border px-2.5 py-0.5 text-xs font-semibold {{ $warna['chip'] }}">{{ $su->ujian->pelajaran->nama }}</span>
                             </div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                {{ $su->ujian->sesi_mulai->translatedFormat('d M Y, H:i') }} &ndash; {{ $su->ujian->sesi_selesai->translatedFormat('H:i') }}
-                            </p>
+                            <p class="text-sm text-[#aab4d4]">{{ $jadwal($su->ujian) }}</p>
                         </div>
 
                         <div class="flex items-center gap-3">
                             @if ($su->sudahSubmit())
-                                <x-ui.badge color="success">Selesai &middot; Nilai {{ $su->nilai }}</x-ui.badge>
-                                <a href="{{ route('cbt.ujian.hasil', $su) }}" class="text-sm text-brand-500 hover:text-brand-600">Lihat Hasil</a>
+                                <span class="rounded-full border border-pbsf-rain/40 bg-pbsf-rain/15 px-3 py-1.5 text-xs font-semibold text-[#86dbcc]">Selesai &middot; Nilai {{ $su->nilai }}</span>
+                                <a href="{{ route('cbt.ujian.hasil', $su) }}" class="pbsf-btn-ghost">Lihat Hasil</a>
                             @elseif ($su->waktu_mulai)
-                                <x-ui.badge color="warning">Sedang Berlangsung</x-ui.badge>
-                                <a href="{{ route('cbt.ujian.kerjakan', $su) }}"
-                                    class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600">
-                                    Lanjutkan
-                                </a>
+                                <span class="rounded-full border border-pbsf-gold/40 bg-pbsf-gold/10 px-3 py-1.5 text-xs font-semibold text-pbsf-gold-light">Sedang Berlangsung</span>
+                                <a href="{{ route('cbt.ujian.kerjakan', $su) }}" class="pbsf-btn-gold">Lanjutkan</a>
                             @elseif (! $su->ujian->sesiSedangBerlangsung())
-                                <x-ui.badge color="light">
+                                <span class="rounded-full border border-white/15 bg-white/[.06] px-3 py-1.5 text-xs font-semibold text-[#aab4d4]">
                                     {{ now()->lt($su->ujian->sesi_mulai) ? 'Belum Dibuka' : 'Sesi Ditutup' }}
-                                </x-ui.badge>
+                                </span>
                             @else
-                                <a href="{{ route('cbt.ujian.petunjuk', $su) }}"
-                                    class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600">
-                                    Mulai Ujian
-                                </a>
+                                <a href="{{ route('cbt.ujian.petunjuk', $su) }}" class="pbsf-btn-gold">Mulai Ujian</a>
                             @endif
                         </div>
                     </div>
                 </div>
+                </div>
             @endforeach
         </div>
     @endif
+
+    <x-cbt.sponsor-strip />
 </x-layouts.cbt>
