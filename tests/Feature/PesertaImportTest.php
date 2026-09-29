@@ -103,7 +103,7 @@ test('a competition flag records minat lomba and registers the peserta into ever
 
 test('a competition flag with no matching ujian yet still records minat lomba, just with a note', function () {
     Jenjang::factory()->create(['nama' => 'SLTA']);
-    $sains = Pelajaran::factory()->create(['nama' => 'Sains']);
+    $ipa = Pelajaran::factory()->create(['nama' => 'IPA']);
 
     $importer = new PesertaImport;
     $importer->collection(collect([
@@ -116,6 +116,6 @@ test('a competition flag with no matching ujian yet still records minat lomba, j
         ->and($importer->errors)->toBeEmpty()
         ->and($importer->notes)->toHaveCount(1)
         // The point of minat lomba: recorded even with no ujian to register into yet.
-        ->and($budi->pelajaranLomba->pluck('id')->all())->toBe([$sains->id])
+        ->and($budi->pelajaranLomba->pluck('id')->all())->toBe([$ipa->id])
         ->and($budi->pesertaUjian()->count())->toBe(0);
 });

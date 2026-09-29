@@ -6,7 +6,7 @@
                 Kolom yang dibutuhkan: <code>noreg</code> (NISN, 10 digit), <code>nama</code>, <code>jenjang</code>
                 (nama jenjang — TK/SD/SLTP/SLTA), <code>asal_sekolah</code>, <code>password</code> (opsional —
                 kosongkan untuk default ke noreg, atau isi <code>acak</code> untuk password random), dan
-                <code>osains</code>/<code>omtk</code>/<code>obing</code> (0/1 — mencatat minat ikut lomba mapel
+                <code>osains</code> (IPA)/<code>omtk</code> (Matematika)/<code>obing</code> (Bahasa Inggris) (0/1 — mencatat minat ikut lomba mapel
                 itu, dan langsung mendaftarkan ke ujiannya kalau sudah ada untuk jenjangnya).
                 <a href="{{ route('admin.peserta.template') }}" class="text-brand-500 hover:text-brand-600">Unduh template</a>.
             </p>

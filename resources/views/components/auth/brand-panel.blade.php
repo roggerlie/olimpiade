@@ -13,7 +13,6 @@
 @php
     $knownLomba = [
         'matematika' => ['icon' => '∑', 'desc' => 'Logika, aljabar & pemecahan masalah'],
-        'sains' => ['icon' => '⚛', 'desc' => 'Fisika, kimia & biologi'],
         'ipa' => ['icon' => '⚛', 'desc' => 'Fisika, kimia & biologi'],
         'inggris' => ['icon' => 'En', 'desc' => 'Reading, grammar & vocabulary'],
     ];

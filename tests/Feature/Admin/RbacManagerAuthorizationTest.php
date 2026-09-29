@@ -31,7 +31,7 @@ test('an admin can call ujian manager mutating actions', function () {
 
 test('an operator does not see ujian manage buttons, but does see the leaderboard link', function () {
     actingAsAdminRole('operator');
-    Ujian::factory()->create(['nama' => 'Ujian Sains']);
+    Ujian::factory()->create(['nama' => 'Ujian IPA']);
 
     $response = Livewire::test('admin.ujian.manager');
 

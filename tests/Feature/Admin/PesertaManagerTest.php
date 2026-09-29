@@ -55,7 +55,7 @@ test('it records minat lomba (checked pelajaran) when creating a peserta', funct
     actingAsAdmin();
     $jenjang = Jenjang::factory()->create();
     $matematika = Pelajaran::factory()->create(['nama' => 'Matematika']);
-    $sains = Pelajaran::factory()->create(['nama' => 'Sains']);
+    $ipa = Pelajaran::factory()->create(['nama' => 'IPA']);
 
     Livewire::test('admin.peserta.manager')
         ->call('create')
@@ -70,24 +70,24 @@ test('it records minat lomba (checked pelajaran) when creating a peserta', funct
 
     $peserta = Peserta::where('noreg', '1000000001')->first();
     expect($peserta->pelajaranLomba->pluck('id')->all())->toBe([$matematika->id])
-        ->and($peserta->pelajaranLomba->pluck('id'))->not->toContain($sains->id);
+        ->and($peserta->pelajaranLomba->pluck('id'))->not->toContain($ipa->id);
 });
 
 test('editing a peserta prefills their minat lomba and syncs changes (including unchecking)', function () {
     actingAsAdmin();
     $matematika = Pelajaran::factory()->create(['nama' => 'Matematika']);
-    $sains = Pelajaran::factory()->create(['nama' => 'Sains']);
+    $ipa = Pelajaran::factory()->create(['nama' => 'IPA']);
     $peserta = Peserta::factory()->create();
-    $peserta->pelajaranLomba()->attach([$matematika->id, $sains->id]);
+    $peserta->pelajaranLomba()->attach([$matematika->id, $ipa->id]);
 
     Livewire::test('admin.peserta.manager')
         ->call('edit', $peserta->id)
-        ->assertSet('pelajaranLombaIds', fn ($ids) => in_array($matematika->id, $ids) && in_array($sains->id, $ids))
-        ->set('pelajaranLombaIds', [$sains->id])
+        ->assertSet('pelajaranLombaIds', fn ($ids) => in_array($matematika->id, $ids) && in_array($ipa->id, $ids))
+        ->set('pelajaranLombaIds', [$ipa->id])
         ->call('save')
         ->assertHasNoErrors();
 
-    expect($peserta->fresh()->pelajaranLomba->pluck('id')->all())->toBe([$sains->id]);
+    expect($peserta->fresh()->pelajaranLomba->pluck('id')->all())->toBe([$ipa->id]);
 });
 
 test('it rejects a duplicate noreg', function () {

@@ -36,9 +36,9 @@ class PesertaImport implements ToCollection, WithHeadingRow
      * @var array<string, string>
      */
     private const MAPEL_LOMBA = [
-        'osains' => 'Sains',
-        'omtk' => 'Matematika',
-        'obing' => 'Bahasa Inggris',
+        'osains' => 'IPA',
+        'omtk' => 'MATEMATIKA',
+        'obing' => 'BAHASA INGGRIS',
     ];
 
     public int $imported = 0;

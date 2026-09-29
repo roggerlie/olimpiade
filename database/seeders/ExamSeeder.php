@@ -33,7 +33,7 @@ class ExamSeeder extends Seeder
         $pelajaran = Pelajaran::factory()->create(['nama' => 'Matematika']);
         // Extra mata pelajaran options for master data — no bank soal/ujian
         // built around these (yet), unlike Matematika above.
-        Pelajaran::factory()->create(['nama' => 'Science']);
+        Pelajaran::factory()->create(['nama' => 'IPA']);
         Pelajaran::factory()->create(['nama' => 'Bahasa Inggris']);
 
         $noreg = 1000001;
