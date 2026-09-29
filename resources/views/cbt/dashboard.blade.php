@@ -55,7 +55,14 @@
                         </div>
                         <div>
                             <p class="text-xs font-semibold tracking-[.12em] text-pbsf-gold uppercase">
-                                {{ $prioritas->waktu_mulai ? 'Sedang kamu kerjakan' : 'Perlu perhatianmu' }}
+                                {{-- Mirrors the action on the right: Lanjutkan / Mulai Ujian / Belum Dibuka. --}}
+                                @if ($prioritas->waktu_mulai)
+                                    Sedang kamu kerjakan
+                                @elseif ($prioritas->ujian->sesiSedangBerlangsung())
+                                    Siap dikerjakan
+                                @else
+                                    Ujian berikutnya
+                                @endif
                             </p>
                             <p class="mt-1 text-lg font-bold">{{ $prioritas->ujian->nama }}</p>
                             <p class="text-sm text-[#aab4d4]">{{ $jadwal($prioritas->ujian) }}</p>

@@ -37,7 +37,12 @@
                                 <span class="text-sm font-semibold text-gray-500 dark:text-gray-400">#{{ $loop->iteration + ($this->soal->currentPage() - 1) * $this->soal->perPage() }}</span>
                                 <x-ui.badge color="success">Jawaban: {{ $soal->jawaban }}</x-ui.badge>
                             </div>
-                            <p class="text-sm text-gray-800 dark:text-white/90">{{ Str::limit(strip_tags($soal->pertanyaan), 150) }}</p>
+                            {{-- Rendered as HTML (already purified on save, see App\Support\SoalContentPurifier)
+                                 so gambar in the pertanyaan shows too; capped in height instead of
+                                 Str::limit(), which would cut through the markup. --}}
+                            <div class="prose prose-sm max-h-48 max-w-none overflow-hidden text-gray-800 dark:prose-invert dark:text-white/90 [&_p]:m-0 [&_img]:mt-1 [&_img]:inline-block [&_img]:max-h-24 [&_img]:rounded-lg [&_img]:border [&_img]:border-gray-200 dark:[&_img]:border-gray-700">
+                                {!! $soal->pertanyaan !!}
+                            </div>
                         </div>
 
                         <div class="flex shrink-0 items-center gap-3 text-sm">

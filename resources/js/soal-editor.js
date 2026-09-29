@@ -145,6 +145,13 @@ window.createSoalRichEditor = async function createSoalRichEditor(target, { init
         paste_data_images: true,
         automatic_uploads: true,
         images_upload_handler: (blobInfo) => handleImageUpload(uploadUrl, blobInfo),
+        // TinyMCE's default rewrites the upload URL relative to the *editor
+        // page* (e.g. "../../../../../storage/soal/9/x.jpg"), which breaks as
+        // soon as the same HTML is shown from a page at a different depth or
+        // the app runs under a subfolder. Keep it root-relative instead
+        // ("/storage/soal/9/x.jpg"): host dropped, full path kept.
+        relative_urls: false,
+        remove_script_host: true,
         setup: (ed) => {
             ed.on('init', () => ed.setContent(initialContent || ''));
             ed.on('change input undo redo', () => onChange?.(ed.getContent()));

@@ -3,7 +3,7 @@
     <div class="relative flex min-h-screen w-full flex-col items-center justify-center bg-gray-50 p-6 dark:bg-gray-900">
         <div class="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-theme-lg dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="mb-6 text-center">
-                <img src="{{ asset('images/logo/logo-icon.svg') }}" alt="CBT Olimpiade" class="mx-auto mb-4 h-12 w-12">
+                <img src="{{ asset('images/logo/gupab.png') }}" alt="CBT Olimpiade" class="mx-auto mb-4 h-12 w-12 object-contain">
                 <h1 class="mb-2 text-title-sm font-semibold text-gray-800 sm:text-title-md dark:text-white/90">
                     Login Admin
                 </h1>

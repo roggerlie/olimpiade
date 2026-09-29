@@ -11,7 +11,9 @@ use App\Models\Peserta;
 use App\Models\Soal;
 use App\Models\Ujian;
 use App\Services\LeaderboardService;
+use App\Services\ResetDataService;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 // All routes here already run behind ['web', 'auth', 'role:administrator|admin|operator']
@@ -115,4 +117,14 @@ Route::middleware('permission:users.manage')->group(function (): void {
 // check) can reach this.
 Route::middleware('role:administrator')->group(function (): void {
     Route::view('roles', 'admin.roles.index')->name('roles.index');
+
+    // Same reasoning, even more so: Reset Data wipes whole categories of
+    // data at once (see App\Services\ResetDataService).
+    Route::view('pengaturan', 'admin.pengaturan.index')->name('pengaturan.index');
+    Route::get('pengaturan/backup/{nama}', function (string $nama) {
+        $path = ResetDataService::FOLDER_BACKUP."/{$nama}";
+        abort_unless(Storage::disk('local')->exists($path), 404);
+
+        return Storage::disk('local')->download($path);
+    })->where('nama', 'reset-\d{8}_\d{6}\.xlsx')->name('pengaturan.backup');
 });

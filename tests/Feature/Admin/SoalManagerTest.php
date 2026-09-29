@@ -24,6 +24,19 @@ test('it lists soal belonging to the given bank soal only', function () {
         ->assertDontSee('Soal bank lain');
 });
 
+test('the list shows gambar embedded in the pertanyaan', function () {
+    actingAsAdmin();
+    $bankSoal = BankSoal::factory()->create();
+    Soal::factory()->create([
+        'bank_soal_id' => $bankSoal->id,
+        'pertanyaan' => '<p>Perhatikan gambar berikut.</p><p><img src="/storage/soal/1/contoh.jpeg" alt="contoh"></p>',
+    ]);
+
+    Livewire::test('admin.soal.manager', ['bankSoalId' => $bankSoal->id])
+        ->assertSee('Perhatikan gambar berikut.')
+        ->assertSeeHtml('<img src="/storage/soal/1/contoh.jpeg" alt="contoh">');
+});
+
 test('search filters soal by pertanyaan text within the same bank soal', function () {
     actingAsAdmin();
     $bankSoal = BankSoal::factory()->create();

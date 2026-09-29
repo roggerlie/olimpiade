@@ -2,6 +2,7 @@
 
 use App\Imports\SoalImport;
 use App\Imports\SoalWordImport;
+use App\Support\ImportArchive;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -67,12 +68,14 @@ new class extends Component
 
         $ekstensi = strtolower($this->file->getClientOriginalExtension());
 
+        $fullPath = ImportArchive::store($this->file, "soal/{$this->bankSoalId}");
+
         if ($ekstensi === 'docx') {
             $importer = new SoalWordImport($this->bankSoalId);
-            $importer->import($this->file->getRealPath());
+            $importer->import($fullPath);
         } else {
             $importer = new SoalImport($this->bankSoalId);
-            Excel::import($importer, $this->file->getRealPath());
+            Excel::import($importer, $fullPath);
         }
 
         $this->imported = $importer->imported;

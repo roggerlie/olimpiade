@@ -35,8 +35,11 @@
 
             <div class="mx-auto flex max-w-(--breakpoint-xl) items-center justify-between gap-4 px-4 py-2.5 md:px-6">
                 <a href="{{ route('cbt.dashboard') }}" class="flex items-center gap-3">
-                    <img src="/images/pbsf/logo-pbsf-3d.webp" alt="Panca Budi School Fest Vol. 04" width="816" height="382"
-                        class="h-10 w-auto drop-shadow-[0_6px_14px_rgba(0,0,0,.5)]" />
+                    {{-- gupab.png is square with ~11% transparent padding per side, so it's
+                         sized up to 48px (emblem ≈ 37px, level with the two-line label) and
+                         -my-1 keeps the header at the same height the old 40px logo gave it. --}}
+                    <img src="{{ asset('images/logo/gupab.png') }}" alt="Yayasan Prof. Dr. H. Kadirun Yahya" width="291" height="291"
+                        class="-my-1 size-12 shrink-0 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,.45)]" />
                     <span class="hidden border-l border-white/15 pl-3 text-xs leading-tight font-semibold tracking-[.12em] text-[#8e9acb] uppercase sm:block">
                         Portal CBT<br><span class="text-pbsf-gold-light">Peserta</span>
                     </span>

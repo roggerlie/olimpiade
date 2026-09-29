@@ -37,6 +37,25 @@ test('dashboard only lists the logged-in peserta own ujian', function () {
         ->assertDontSee($ujianOrangLain->nama);
 });
 
+test('the dashboard highlight label matches the ujian state', function (array $ujianOverrides, ?bool $sudahMulai, string $label) {
+    $peserta = actingAsPeserta();
+    $ujian = ujianDenganSoal(2, $ujianOverrides);
+    PesertaUjian::factory()->create([
+        'peserta_id' => $peserta->id,
+        'ujian_id' => $ujian->id,
+        'waktu_mulai' => $sudahMulai ? now()->subMinute() : null,
+    ]);
+
+    $this->get(route('cbt.dashboard'))
+        ->assertOk()
+        ->assertSee($label)
+        ->assertDontSee('Perlu perhatianmu');
+})->with([
+    'sedang dikerjakan' => [[], true, 'Sedang kamu kerjakan'],
+    'sesi dibuka' => [[], false, 'Siap dikerjakan'],
+    'sesi belum dibuka' => [['sesi_mulai' => now()->addDay(), 'sesi_selesai' => now()->addDay()->addHour()], false, 'Ujian berikutnya'],
+]);
+
 test('petunjuk shows the scoring rule for an attempt not yet started', function () {
     $peserta = actingAsPeserta();
     $ujian = ujianDenganSoal(3);

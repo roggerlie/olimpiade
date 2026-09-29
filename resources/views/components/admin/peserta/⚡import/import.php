@@ -1,6 +1,7 @@
 <?php
 
 use App\Imports\PesertaImport;
+use App\Support\ImportArchive;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -56,7 +57,7 @@ new class extends Component
         ]);
 
         $importer = new PesertaImport;
-        Excel::import($importer, $this->file->getRealPath());
+        Excel::import($importer, ImportArchive::store($this->file, 'peserta'));
 
         $this->imported = $importer->imported;
         $this->importErrors = $importer->errors;

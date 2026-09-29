@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Foundation\Console\ServeCommand;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -39,5 +40,16 @@ class AppServiceProvider extends ServiceProvider
         // whatever .env says) that config()/env() can't override — see the "id" note
         // in .env. This line is the actual source of truth regardless of that.
         Carbon::setLocale('id');
+
+        // `php artisan serve` only forwards whitelisted env vars to the PHP
+        // dev-server process. On Windows that drops TEMP/TMP, so PHP falls back
+        // to C:\Windows\Temp (not writable for a normal user) and every file
+        // upload (e.g. Bank Soal Excel import) fails with "unable to create a
+        // temporary file in Unknown on line 0" before reaching our code.
+        if ($this->app->runningInConsole()) {
+            ServeCommand::$passthroughVariables = array_values(array_unique([
+                ...ServeCommand::$passthroughVariables, 'TEMP', 'TMP', 'TMPDIR',
+            ]));
+        }
     }
 }

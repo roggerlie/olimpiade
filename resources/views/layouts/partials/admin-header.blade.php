@@ -39,7 +39,7 @@
 
             {{-- Logo (mobile only — desktop already shows it in the open sidebar) --}}
             <a href="{{ route('admin.dashboard') }}" class="xl:hidden">
-                <img src="/images/logo/logo-icon.svg" alt="CBT Olimpiade" width="28" height="28" />
+                <img src="{{ asset('images/logo/gupab.png') }}" alt="CBT Olimpiade" width="28" height="28" class="object-contain" />
             </a>
 
             {{-- Mobile application-menu toggle (reveals row 2 below) --}}
