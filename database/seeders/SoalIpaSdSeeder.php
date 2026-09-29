@@ -11,16 +11,24 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\select;
+
 /**
  * 50 illustrated IPA SD soal (termometer, grafik, rangkaian listrik, gelas
  * ukur, rantai makanan, neraca, magnet, perubahan wujud, kecepatan), every one
  * with its own SVG diagram (see Gambar\IpaSdGambar) stored on the public disk
  * the same way an editor upload is: storage/app/public/soal/{bankSoalId}/.
  *
- * Targets the first bank soal for jenjang SD + pelajaran IPA. Not part of
- * DatabaseSeeder — run it on its own:
+ * Not part of DatabaseSeeder — run it on its own and pick the target bank
+ * soal from the list it shows (an IPA SD one is preselected):
  *
  *   php artisan db:seed --class=SoalIpaSdSeeder
+ *
+ * Picking a bank soal that isn't SD + IPA is allowed, but only after an
+ * explicit "Tetap lanjut?" (defaults to no, so --no-interaction aborts).
+ * Code can skip the prompt via $this->callWith(SoalIpaSdSeeder::class,
+ * ['bankSoalId' => 5]).
  *
  * Re-runnable: soal it seeded before (recognized by their `seed-ipa-sd-`
  * gambar) are replaced, soal an admin wrote by hand are left alone.
@@ -33,16 +41,27 @@ class SoalIpaSdSeeder extends Seeder
 
     private int $nomor = 0;
 
-    public function run(): void
+    public function run(?int $bankSoalId = null): void
     {
+        $id = $bankSoalId ?? $this->pilihBankSoal();
+
+        if ($id === null) {
+            return;
+        }
+
         $bankSoal = BankSoal::query()
-            ->whereHas('jenjang', fn ($q) => $q->where('nama', 'SD'))
-            ->whereHas('pelajaran', fn ($q) => $q->where('nama', 'IPA'))
-            ->orderBy('id')
+            ->with(['jenjang', 'pelajaran'])
+            ->where('id', $id)
             ->first();
 
         if (! $bankSoal) {
-            $this->command?->error('Bank soal jenjang SD + pelajaran IPA belum ada. Buat dulu di menu Bank Soal.');
+            $this->command?->error("Bank soal dengan id {$id} tidak ditemukan.");
+
+            return;
+        }
+
+        if (! $this->bankCocok($bankSoal) && ! $this->konfirmasiBankBeda($bankSoal)) {
+            $this->command?->warn('Dibatalkan, tidak ada soal yang ditambahkan.');
 
             return;
         }
@@ -64,6 +83,53 @@ class SoalIpaSdSeeder extends Seeder
         });
 
         $this->command?->info("{$this->nomor} soal IPA SD bergambar ditambahkan ke \"{$bankSoal->nama}\" (id {$bankSoal->id}).");
+    }
+
+    /**
+     * Lists every bank soal and returns the chosen id, or null when there's
+     * nothing to choose from.
+     */
+    private function pilihBankSoal(): ?int
+    {
+        if (! $this->command) {
+            throw new RuntimeException('Tanpa console, panggil dengan callWith(SoalIpaSdSeeder::class, [\'bankSoalId\' => ...]).');
+        }
+
+        $semua = BankSoal::query()->with(['jenjang', 'pelajaran'])->orderBy('id')->get();
+
+        if ($semua->isEmpty()) {
+            $this->command->error('Belum ada bank soal. Buat dulu di menu Bank Soal.');
+
+            return null;
+        }
+
+        return (int) select(
+            label: 'Pilih bank soal',
+            options: $semua->mapWithKeys(fn (BankSoal $b) => [
+                $b->id => "{$b->id} — {$b->nama} ({$b->jenjang?->nama}, {$b->pelajaran?->nama})",
+            ])->all(),
+            default: $semua->first(fn (BankSoal $b) => $this->bankCocok($b))?->id,
+            scroll: 10,
+        );
+    }
+
+    private function bankCocok(BankSoal $bankSoal): bool
+    {
+        return $bankSoal->jenjang?->nama === 'SD' && $bankSoal->pelajaran?->nama === 'IPA';
+    }
+
+    private function konfirmasiBankBeda(BankSoal $bankSoal): bool
+    {
+        if (! $this->command) {
+            return false;
+        }
+
+        $this->command->warn(
+            "Bank soal #{$bankSoal->id} \"{$bankSoal->nama}\" adalah {$bankSoal->jenjang?->nama} / {$bankSoal->pelajaran?->nama}, "
+            .'sedangkan soal ini untuk SD / IPA.'
+        );
+
+        return confirm('Tetap lanjut?', default: false);
     }
 
     private function termometer(): void

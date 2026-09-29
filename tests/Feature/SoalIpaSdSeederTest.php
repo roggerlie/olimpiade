@@ -14,18 +14,31 @@ beforeEach(function () {
     Storage::fake('public');
 });
 
-function bankSoalIpaSd(): BankSoal
+function bankSoalDengan(string $jenjang, string $pelajaran): BankSoal
 {
     return BankSoal::factory()->create([
-        'jenjang_id' => Jenjang::factory()->create(['nama' => 'SD'])->id,
-        'pelajaran_id' => Pelajaran::factory()->create(['nama' => 'IPA'])->id,
+        'jenjang_id' => Jenjang::factory()->create(['nama' => $jenjang])->id,
+        'pelajaran_id' => Pelajaran::factory()->create(['nama' => $pelajaran])->id,
     ]);
 }
 
-test('it seeds 50 illustrated soal into the IPA SD bank soal, each with its own gambar', function () {
-    $bankSoal = bankSoalIpaSd();
+function labelBankSoal(BankSoal $b): string
+{
+    return "{$b->id} — {$b->nama} ({$b->jenjang->nama}, {$b->pelajaran->nama})";
+}
 
-    $this->seed(SoalIpaSdSeeder::class);
+/**
+ * Runs the seeder the way `db:seed --class=...` would, without the prompt.
+ */
+function seedIpaSdKe(int $bankSoalId): void
+{
+    app(SoalIpaSdSeeder::class)->setContainer(app())->__invoke(['bankSoalId' => $bankSoalId]);
+}
+
+test('it seeds 50 illustrated soal into the given bank soal, each with its own gambar', function () {
+    $bankSoal = bankSoalDengan('SD', 'IPA');
+
+    seedIpaSdKe($bankSoal->id);
 
     $soal = Soal::where('bank_soal_id', $bankSoal->id)->get();
     $gambar = Storage::disk('public')->files("soal/{$bankSoal->id}");
@@ -44,24 +57,45 @@ test('it seeds 50 illustrated soal into the IPA SD bank soal, each with its own 
     expect($soal->countBy('jawaban')->keys()->sort()->values()->all())->toBe(['A', 'B', 'C', 'D']);
 });
 
+test('db:seed asks which bank soal to fill', function () {
+    $lain = bankSoalDengan('SLTA', 'Matematika');
+    $ipaSd = bankSoalDengan('SD', 'IPA');
+
+    $this->artisan('db:seed', ['--class' => SoalIpaSdSeeder::class])
+        ->expectsQuestion('Pilih bank soal', labelBankSoal($ipaSd))
+        ->assertSuccessful();
+
+    expect(Soal::where('bank_soal_id', $ipaSd->id)->count())->toBe(50)
+        ->and(Soal::where('bank_soal_id', $lain->id)->count())->toBe(0);
+});
+
+test('picking a non IPA SD bank soal needs confirmation, and declining adds nothing', function (bool $lanjut, int $jumlah) {
+    $matematika = bankSoalDengan('SLTA', 'Matematika');
+
+    $this->artisan('db:seed', ['--class' => SoalIpaSdSeeder::class])
+        ->expectsQuestion('Pilih bank soal', labelBankSoal($matematika))
+        ->expectsConfirmation('Tetap lanjut?', $lanjut ? 'yes' : 'no')
+        ->assertSuccessful();
+
+    expect(Soal::where('bank_soal_id', $matematika->id)->count())->toBe($jumlah);
+})->with([
+    'lanjut' => [true, 50],
+    'batal' => [false, 0],
+]);
+
+test('an unknown bank soal id adds nothing', function () {
+    seedIpaSdKe(999);
+
+    expect(Soal::count())->toBe(0);
+});
+
 test('re-running replaces its own soal but keeps soal written by hand', function () {
-    $bankSoal = bankSoalIpaSd();
+    $bankSoal = bankSoalDengan('SD', 'IPA');
     Soal::factory()->create(['bank_soal_id' => $bankSoal->id, 'pertanyaan' => '<p>Soal buatan admin</p>']);
 
-    $this->seed(SoalIpaSdSeeder::class);
-    $this->seed(SoalIpaSdSeeder::class);
+    seedIpaSdKe($bankSoal->id);
+    seedIpaSdKe($bankSoal->id);
 
     expect(Soal::where('bank_soal_id', $bankSoal->id)->count())->toBe(51)
         ->and(Soal::where('pertanyaan', '<p>Soal buatan admin</p>')->exists())->toBeTrue();
-});
-
-test('it does nothing without an IPA SD bank soal', function () {
-    BankSoal::factory()->create([
-        'jenjang_id' => Jenjang::factory()->create(['nama' => 'SLTP'])->id,
-        'pelajaran_id' => Pelajaran::factory()->create(['nama' => 'IPA'])->id,
-    ]);
-
-    $this->seed(SoalIpaSdSeeder::class);
-
-    expect(Soal::count())->toBe(0);
 });
