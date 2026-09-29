@@ -20,11 +20,11 @@ class DatabaseSeeder extends Seeder
 
         $admin = User::factory()->create([
             'username' => 'admin',
-            'name' => 'Admin Olimpiade',
-            'email' => 'admin@olimpiade.test',
+            'name' => 'Administrator',
+            'email' => 'nirwananshor@gmail.com',
         ]);
         $admin->assignRole('administrator');
 
-        $this->call(ExamSeeder::class);
+        // $this->call(ExamSeeder::class);
     }
 }
