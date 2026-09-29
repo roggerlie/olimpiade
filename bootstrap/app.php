@@ -39,7 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // an already-authenticated user hitting a guest route (e.g. revisiting
         // /login) lands on the dashboard for their own guard.
         $middleware->redirectGuestsTo(
-            fn (Request $request) => $request->is('admin/*') ? route('admin.login') : route('login')
+            fn (Request $request) => $request->is('admin', 'admin/*') ? route('admin.login') : route('login')
         );
         $middleware->redirectUsersTo(
             fn (Request $request) => Auth::guard('web')->check()

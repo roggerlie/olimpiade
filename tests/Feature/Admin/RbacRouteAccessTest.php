@@ -117,3 +117,13 @@ test('the sidebar shows kelola pengguna to an administrator', function () {
     $response->assertOk();
     $response->assertSee('Kelola Pengguna');
 });
+
+test('bare /admin redirects any admin tier to the dashboard', function (string $role) {
+    actingAsAdminRole($role);
+
+    $this->get('/admin')->assertRedirect(route('admin.dashboard'));
+})->with(['admin', 'operator']);
+
+test('bare /admin sends a guest to the admin login, not the peserta login', function () {
+    $this->get('/admin')->assertRedirect(route('admin.login'));
+});

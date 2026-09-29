@@ -23,6 +23,8 @@ use Maatwebsite\Excel\Facades\Excel;
 // the dashboard. `administrator` bypasses every one of them (Gate::before in
 // AppServiceProvider), so these groups only matter for `admin` and `operator`.
 
+// Bare /admin has no page of its own — send it to the dashboard.
+Route::get('/', fn () => redirect()->route('admin.dashboard'))->name('home');
 Route::view('dashboard', 'admin.dashboard')->name('dashboard');
 
 Route::middleware('permission:master-data.manage')->group(function (): void {
