@@ -65,7 +65,10 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // WIB, not UTC: admins type sesi_mulai/sesi_selesai in local time and
+    // every "is the session open / has time run out" check compares them
+    // against now() — both must be in the same zone.
+    'timezone' => env('APP_TIMEZONE', 'Asia/Jakarta'),
 
     /*
     |--------------------------------------------------------------------------

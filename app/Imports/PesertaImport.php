@@ -138,7 +138,9 @@ class PesertaImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            $pelajaran = Pelajaran::query()->where('nama', $namaPelajaran)->first();
+            // Case-insensitive on every driver (MySQL's *_ci collation already
+            // is, SQLite isn't), so MAPEL_LOMBA's casing needn't match Master Data's.
+            $pelajaran = Pelajaran::query()->whereRaw('lower(nama) = ?', [Str::lower($namaPelajaran)])->first();
 
             if (! $pelajaran) {
                 $this->notes[] = "Baris {$baris}: {$peserta->nama} ditandai ikut lomba {$namaPelajaran}, tapi mapel '{$namaPelajaran}' tidak ditemukan di Master Data.";

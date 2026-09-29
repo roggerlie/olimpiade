@@ -28,6 +28,14 @@
     `document.body`, which happens to also be how it escapes this modal's
     `overflow-y-auto` clipping and lands above it (flatpickr's default
     z-index already matches x-ui.modal's).
+
+    `altFormat` — optional human-friendly display format (e.g. 'd M Y, H:i'):
+    flatpickr then shows a second, visible input in that format and turns the
+    original into a hidden one still holding `dateFormat` for wire:model.
+    That extra input is exactly the kind of DOM Livewire's morph would rip
+    out, so the input area is wire:ignore'd, and server-side changes to the
+    bound property (edit()/reset()) are pushed into flatpickr via $wire.$watch
+    instead of relying on morph.
 --}}
 @props([
     'id' => 'datepicker-'.uniqid(),
@@ -37,7 +45,13 @@
     'label' => null,
     'placeholder' => 'Pilih tanggal',
     'dateFormat' => 'Y-m-d',
+    'altFormat' => null,
 ])
+
+@php
+    $model = $attributes->wire('model')->value();
+    $inputClass = 'h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent py-2.5 pl-4 pr-11 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30';
+@endphp
 
 <div x-data="{
         flatpickrInstance: null,
@@ -50,6 +64,9 @@
                     appendTo: document.body,
                     monthSelectorType: 'static',
                     dateFormat: @js($dateFormat),
+                    altInput: @js((bool) $altFormat),
+                    altFormat: @js($altFormat ?? ''),
+                    altInputClass: @js($inputClass),
                     defaultDate: @js($defaultDate),
                     onChange: () => {
                         this.$refs.dateInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -65,6 +82,12 @@
                         }
                     },
                 });
+
+                @if ($model && $altFormat)
+                    this.$wire.$watch(@js($model), (value) => {
+                        value ? this.flatpickrInstance.setDate(value, false) : this.flatpickrInstance.clear(false);
+                    });
+                @endif
             });
         },
         destroy() {
@@ -78,9 +101,9 @@
         </label>
     @endif
 
-    <div class="custom-datepicker relative">
+    <div class="custom-datepicker relative" @if ($altFormat) wire:ignore @endif>
         <input x-ref="dateInput" type="text" id="{{ $id }}" placeholder="{{ $placeholder }}" autocomplete="off"
-            {{ $attributes->merge(['class' => 'h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent py-2.5 pl-4 pr-11 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30']) }} />
+            {{ $attributes->merge(['class' => $inputClass]) }} />
 
         <span class="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">

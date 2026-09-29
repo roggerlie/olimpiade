@@ -9,6 +9,11 @@
  * Livewire's own bundled Alpine, not this file.
  */
 import flatpickr from 'flatpickr';
+import { Indonesian } from 'flatpickr/dist/l10n/id.js';
 import 'flatpickr/dist/flatpickr.min.css';
+
+// Month/day names in Indonesian, matching Carbon's translatedFormat() output
+// elsewhere (e.g. "17 Agu 2026, 08:15" in the date-picker's altFormat).
+flatpickr.localize(Indonesian);
 
 window.flatpickr = flatpickr;

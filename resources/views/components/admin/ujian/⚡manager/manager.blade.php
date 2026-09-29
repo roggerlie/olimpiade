@@ -112,13 +112,13 @@
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <x-form.date-picker id="ujian-sesi-mulai" label="Sesi Mulai" enable-time date-format="Y-m-d\TH:i"
+                        <x-form.date-picker id="ujian-sesi-mulai" label="Sesi Mulai" enable-time date-format="Y-m-d\TH:i" alt-format="d M Y, H:i"
                             wire:model="sesiMulai" placeholder="Pilih tanggal & jam mulai" />
                         @error('sesiMulai') <p class="mt-1 text-sm text-error-500">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
-                        <x-form.date-picker id="ujian-sesi-selesai" label="Sesi Selesai" enable-time date-format="Y-m-d\TH:i"
+                        <x-form.date-picker id="ujian-sesi-selesai" label="Sesi Selesai" enable-time date-format="Y-m-d\TH:i" alt-format="d M Y, H:i"
                             wire:model="sesiSelesai" placeholder="Pilih tanggal & jam selesai" />
                         @error('sesiSelesai') <p class="mt-1 text-sm text-error-500">{{ $message }}</p> @enderror
                     </div>
