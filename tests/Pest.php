@@ -54,6 +54,12 @@ function something()
 }
 
 /**
+ * Shape of a generated peserta password (App\Support\PasswordPeserta): six
+ * characters, none of them look-alikes (0/O, 1/I/L, 5/S, 8/B, 2/Z).
+ */
+const PASSWORD_PESERTA_PATTERN = '/^[ACDEFGHJKMNPQRTUVWXY34679]{6}$/';
+
+/**
  * Create a user, assign the `administrator` role (full access to every
  * /admin permission via the Gate::before super-admin bypass), and log the
  * current test in as that user. Used by Livewire component tests that

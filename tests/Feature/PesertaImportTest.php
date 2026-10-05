@@ -19,8 +19,8 @@ test('it imports valid rows and creates matching login accounts', function () {
 
     $importer = new PesertaImport;
     $importer->collection(collect([
-        ['noreg' => '1000000001', 'nama' => 'Budi Santoso', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh', 'password' => ''],
-        ['noreg' => '1000000002', 'nama' => 'Siti Aminah', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh', 'password' => 'passwordku'],
+        ['noreg' => '1000000001', 'nama' => 'Budi Santoso', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh'],
+        ['noreg' => '1000000002', 'nama' => 'Siti Aminah', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh'],
     ]));
 
     expect($importer->imported)->toBe(2)
@@ -29,30 +29,26 @@ test('it imports valid rows and creates matching login accounts', function () {
 
     $budi = Peserta::where('noreg', '1000000001')->first();
     expect($budi->jenjang_id)->toBe($jenjang->id)
-        // password left blank in the sheet defaults to the noreg itself.
-        ->and(Hash::check('1000000001', $budi->password))->toBeTrue()
-        ->and($budi->password_plain)->toBe('1000000001');
-
-    $siti = Peserta::where('noreg', '1000000002')->first();
-    expect(Hash::check('passwordku', $siti->password))->toBeTrue()
-        ->and($siti->password_plain)->toBe('passwordku');
+        ->and($budi->password_plain)->toMatch(PASSWORD_PESERTA_PATTERN)
+        ->and(Hash::check($budi->password_plain, $budi->password))->toBeTrue()
+        ->and($importer->generatedPasswords)->toBe([
+            '1000000001' => $budi->password_plain,
+            '1000000002' => Peserta::where('noreg', '1000000002')->value('password_plain'),
+        ]);
 });
 
-test('a password of "acak" generates a random one, tracked for the admin to read back', function () {
+test('it always generates the password, ignoring a password column from an older template', function () {
     Jenjang::factory()->create(['nama' => 'SD']);
 
     $importer = new PesertaImport;
     $importer->collection(collect([
-        ['noreg' => '1000000001', 'nama' => 'Budi Santoso', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh', 'password' => 'acak'],
+        ['noreg' => '1000000001', 'nama' => 'Budi Santoso', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh', 'password' => 'passwordku'],
     ]));
 
     $budi = Peserta::where('noreg', '1000000001')->first();
 
-    expect($importer->generatedPasswords)->toHaveKey('1000000001')
-        ->and($budi->password_plain)->toBe($importer->generatedPasswords['1000000001'])
-        ->and(Hash::check($budi->password_plain, $budi->password))->toBeTrue()
-        // Never literally "acak" — that's the trigger value, not the password.
-        ->and($budi->password_plain)->not->toBe('acak');
+    expect($budi->password_plain)->toMatch(PASSWORD_PESERTA_PATTERN)
+        ->and(Hash::check('passwordku', $budi->password))->toBeFalse();
 });
 
 test('it reports invalid rows without aborting the whole import', function () {

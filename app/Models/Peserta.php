@@ -5,7 +5,9 @@ namespace App\Models;
 use Database\Factories\PesertaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -40,6 +42,30 @@ class Peserta extends Authenticatable
         return [
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * The Kelola Peserta list's search box + jenjang + pelajaran filters —
+     * shared by the paginated table and "Export Excel", so both always act
+     * on exactly the same set of peserta. The pelajaran filter matches on
+     * pelajaranLomba() (the mapel ticked on the peserta form / flagged in
+     * the import), the only peserta-to-pelajaran link there is.
+     */
+    #[Scope]
+    protected function filterAdmin(Builder $query, ?string $search, int|string|null $jenjangId, int|string|null $pelajaranId = null): void
+    {
+        $query
+            ->when($search, function (Builder $query, string $search): void {
+                $query->where(function (Builder $q) use ($search): void {
+                    $q->where('nama', 'like', "%{$search}%")
+                        ->orWhere('noreg', 'like', "%{$search}%");
+                });
+            })
+            ->when($jenjangId, fn (Builder $query, int|string $jenjangId) => $query->where('jenjang_id', $jenjangId))
+            ->when($pelajaranId, fn (Builder $query, int|string $pelajaranId) => $query->whereHas(
+                'pelajaranLomba',
+                fn (Builder $q) => $q->where('pelajaran.id', $pelajaranId),
+            ));
     }
 
     public function jenjang(): BelongsTo

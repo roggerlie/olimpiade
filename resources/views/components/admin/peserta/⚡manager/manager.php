@@ -3,6 +3,7 @@
 use App\Models\Jenjang;
 use App\Models\Pelajaran;
 use App\Models\Peserta;
+use App\Support\PasswordPeserta;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
@@ -45,11 +46,30 @@ new class extends Component
     #[Url(as: 'jenjang')]
     public string $filterJenjangId = '';
 
+    #[Url(as: 'pelajaran')]
+    public string $filterPelajaranId = '';
+
+    /**
+     * Peserta ticked for "Acak Ulang Password". Only ever spans the current
+     * page: cleared whenever the page changes (updatedPaginators(), which
+     * also fires on the resetPage() a search/jenjang change triggers).
+     * Checkbox values arrive as strings, hence the mixed element type.
+     *
+     * @var array<int, int|string>
+     */
+    public array $selectedIds = [];
+
     public function updated(string $property): void
     {
-        if (in_array($property, ['search', 'filterJenjangId'], true)) {
+        if (in_array($property, ['search', 'filterJenjangId', 'filterPelajaranId'], true)) {
             $this->resetPage();
+            $this->selectedIds = [];
         }
+    }
+
+    public function updatedPaginators(): void
+    {
+        $this->selectedIds = [];
     }
 
     #[Computed]
@@ -57,15 +77,34 @@ new class extends Component
     {
         return Peserta::query()
             ->with(['jenjang', 'pelajaranLomba'])
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('nama', 'like', "%{$this->search}%")
-                        ->orWhere('noreg', 'like', "%{$this->search}%");
-                });
-            })
-            ->when($this->filterJenjangId, fn ($query) => $query->where('jenjang_id', $this->filterJenjangId))
+            ->filterAdmin($this->search, $this->filterJenjangId, $this->filterPelajaranId)
             ->orderBy('noreg')
             ->paginate(10);
+    }
+
+    /**
+     * Drives the header checkbox: ticked only when every row on this page is.
+     */
+    #[Computed]
+    public function semuaDiHalamanTerpilih(): bool
+    {
+        $idsDiHalaman = $this->peserta->pluck('id')->map(fn (int $id) => (string) $id);
+
+        return $idsDiHalaman->isNotEmpty()
+            && $idsDiHalaman->diff(array_map('strval', $this->selectedIds))->isEmpty();
+    }
+
+    /**
+     * Header checkbox: ticks every row on the current page, or clears them
+     * all when they already are.
+     */
+    public function toggleSemuaDiHalaman(): void
+    {
+        $this->selectedIds = $this->semuaDiHalamanTerpilih
+            ? []
+            : $this->peserta->pluck('id')->all();
+
+        unset($this->semuaDiHalamanTerpilih);
     }
 
     #[Computed]
@@ -123,7 +162,9 @@ new class extends Component
                 'nama' => ['required', 'string', 'max:255'],
                 'jenjangId' => ['required', 'exists:jenjang,id'],
                 'asalSekolah' => ['required', 'string', 'max:255'],
-                'password' => [$this->editingId ? 'nullable' : 'required', 'string', 'min:6'],
+                // Blank on create → generated (App\Support\PasswordPeserta);
+                // blank on edit → existing password left alone.
+                'password' => ['nullable', 'string', 'min:6'],
             ]
         )->validate();
 
@@ -144,16 +185,18 @@ new class extends Component
 
             $this->statusMessage = 'Peserta diperbarui.';
         } else {
+            $passwordPlain = $data['password'] ?: PasswordPeserta::generate();
+
             $peserta = Peserta::create([
                 'jenjang_id' => $data['jenjangId'],
                 'noreg' => $data['noreg'],
                 'nama' => $data['nama'],
                 'asal_sekolah' => $data['asalSekolah'],
-                'password' => Hash::make($data['password']),
-                'password_plain' => $data['password'],
+                'password' => Hash::make($passwordPlain),
+                'password_plain' => $passwordPlain,
             ]);
 
-            $this->statusMessage = 'Peserta ditambahkan.';
+            $this->statusMessage = "Peserta ditambahkan. Password: {$passwordPlain}";
         }
 
         // Minat lomba (App\Models\Peserta::pelajaranLomba()) — sync() so
@@ -173,23 +216,68 @@ new class extends Component
 
         $this->statusMessage = 'Peserta dihapus.';
         $this->errorMessage = null;
+        $this->selectedIds = array_values(array_filter($this->selectedIds, fn (int|string $selectedId) => (int) $selectedId !== $id));
         unset($this->peserta);
     }
 
     /**
-     * Resets a peserta's password back to their own noreg — the same
-     * fallback App\Imports\PesertaImport uses when a sheet's password
-     * column is left blank. Peserta have no email on file (see
-     * App\Models\Peserta), so there's no self-service "forgot password"
-     * link to send; this is the admin-side equivalent.
+     * Fills the form's password field with a generated one, so the admin
+     * can see it (and re-roll it) before saving.
+     */
+    public function acakPassword(): void
+    {
+        $this->password = PasswordPeserta::generate();
+        $this->resetErrorBag('password');
+    }
+
+    /**
+     * Gives a peserta a fresh generated password. Peserta have no email on
+     * file (see App\Models\Peserta), so there's no self-service "forgot
+     * password" link to send; this is the admin-side equivalent. Never
+     * resets to the noreg — a NISN isn't secret, so that'd let anyone log
+     * in as anyone.
      */
     public function resetPassword(int $id): void
     {
         $peserta = Peserta::findOrFail($id);
-        $peserta->update(['password' => Hash::make($peserta->noreg), 'password_plain' => $peserta->noreg]);
+        $this->gantiPassword($peserta);
 
-        $this->statusMessage = "Password {$peserta->nama} direset ke No. Registrasi-nya ({$peserta->noreg}).";
+        $this->statusMessage = "Password {$peserta->nama} direset menjadi {$peserta->password_plain}.";
         $this->errorMessage = null;
+        unset($this->peserta);
+    }
+
+    /**
+     * "Acak Ulang Password" — regenerates the password of exactly the
+     * peserta ticked in the list ($selectedIds), nobody else. Ids that no
+     * longer exist are simply skipped.
+     */
+    public function acakUlangPasswordMassal(): void
+    {
+        $pesertaTerpilih = Peserta::query()
+            ->whereIn('id', array_map('intval', $this->selectedIds))
+            ->get();
+
+        if ($pesertaTerpilih->isEmpty()) {
+            $this->errorMessage = 'Centang dulu peserta yang password-nya mau diacak ulang.';
+            $this->statusMessage = null;
+
+            return;
+        }
+
+        $pesertaTerpilih->each(fn (Peserta $peserta) => $this->gantiPassword($peserta));
+
+        // $selectedIds deliberately kept, so "Export Terpilih" can print
+        // exactly these peserta's new credentials right away.
+        $this->statusMessage = "Password {$pesertaTerpilih->count()} peserta berhasil diacak ulang. Klik Export Terpilih untuk mencetak daftarnya.";
+        $this->errorMessage = null;
+        unset($this->peserta);
+    }
+
+    private function gantiPassword(Peserta $peserta): void
+    {
+        $passwordPlain = PasswordPeserta::generate();
+        $peserta->update(['password' => Hash::make($passwordPlain), 'password_plain' => $passwordPlain]);
     }
 
     public function closeModal(): void

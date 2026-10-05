@@ -1,12 +1,15 @@
 <?php
 
 use App\Exports\LeaderboardExport;
+use App\Exports\PesertaExport;
 use App\Exports\PesertaImportTemplateExport;
 use App\Exports\PesertaUjianExport;
 use App\Exports\SoalImportTemplateExport;
 use App\Exports\SoalWordTemplateExport;
 use App\Http\Controllers\Admin\SoalGambarUploadController;
 use App\Models\BankSoal;
+use App\Models\Jenjang;
+use App\Models\Pelajaran;
 use App\Models\Peserta;
 use App\Models\Soal;
 use App\Models\Ujian;
@@ -92,16 +95,30 @@ Route::middleware('permission:peserta.manage')->group(function (): void {
     Route::get('peserta/template', function () {
         return Excel::download(new PesertaImportTemplateExport, 'template-peserta.xlsx');
     })->name('peserta.template');
+    // Same `q`/`jenjang`/`pelajaran` query params as the Kelola Peserta
+    // list's own filters (see the admin.peserta.manager component's #[Url]
+    // props), or `ids[]` — the peserta ticked in that list — which takes precedence.
+    Route::get('peserta/export', function () {
+        $ids = collect(request()->array('ids'))->filter(fn ($id) => ctype_digit((string) $id))->map(fn ($id) => (int) $id)->values()->all();
+
+        if ($ids) {
+            return Excel::download(new PesertaExport(ids: $ids), 'Peserta-Terpilih-'.now()->format('Y-m-d').'.xlsx');
+        }
+
+        $jenjang = Jenjang::find(request('jenjang'));
+        $pelajaran = Pelajaran::find(request('pelajaran'));
+        $namaFile = collect(['Peserta', $jenjang?->nama, $pelajaran?->nama, now()->format('Y-m-d')])->filter()->join('-');
+
+        return Excel::download(new PesertaExport(request('q'), $jenjang?->id, $pelajaran?->id), "{$namaFile}.xlsx");
+    })->name('peserta.export');
 });
 
 Route::middleware('permission:kartu-peserta.print')->group(function (): void {
     Route::view('kartu-peserta', 'admin.kartu-peserta.index')->name('kartu-peserta.index');
     Route::get('kartu-peserta/cetak', function () {
-        $jenjangId = request('jenjang');
-
         $peserta = Peserta::query()
             ->with('jenjang')
-            ->when($jenjangId, fn ($query) => $query->where('jenjang_id', $jenjangId))
+            ->filterAdmin(null, request('jenjang'), request('pelajaran'))
             ->orderBy('nama')
             ->get();
 

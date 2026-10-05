@@ -7,6 +7,7 @@ use App\Models\Pelajaran;
 use App\Models\Peserta;
 use App\Models\PesertaUjian;
 use App\Models\Ujian;
+use App\Support\PasswordPeserta;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -16,12 +17,14 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 /**
  * Bulk peserta import. Expects columns: noreg (NISN, 10 digit), nama, jenjang
- * (Jenjang.nama — e.g. "SLTA"), asal_sekolah, password (optional: blank
- * defaults to noreg, or literally "acak" to generate a random one), and
- * three competition flags — osains/omtk/obing (0/1) — that record the
+ * (Jenjang.nama — e.g. "SLTA"), asal_sekolah, and three competition flags — osains/omtk/obing (0/1) — that record the
  * peserta's interest in that mapel ("minat lomba", see
  * App\Models\Peserta::pelajaranLomba()) and, if a matching Ujian already
  * exists for their jenjang, register them into it right away too.
+ *
+ * Every imported peserta always gets a freshly generated password (see
+ * App\Support\PasswordPeserta) — a `password` column, if an older template
+ * still has one, is ignored.
  *
  * Processes row-by-row so one bad row doesn't abort the whole file; failures
  * are collected in $errors and surfaced back to the admin. $notes carries
@@ -50,8 +53,7 @@ class PesertaImport implements ToCollection, WithHeadingRow
     public array $notes = [];
 
     /**
-     * noreg => plaintext password, for rows where a random one was
-     * generated — the admin has no other way to learn what it was.
+     * noreg => the plaintext password generated for each imported row.
      *
      * @var array<string, string>
      */
@@ -67,7 +69,6 @@ class PesertaImport implements ToCollection, WithHeadingRow
                 'nama' => trim((string) ($row['nama'] ?? '')),
                 'jenjang' => trim((string) ($row['jenjang'] ?? '')),
                 'asal_sekolah' => trim((string) ($row['asal_sekolah'] ?? '')),
-                'password' => trim((string) ($row['password'] ?? '')),
             ];
 
             $validator = Validator::make($data, [
@@ -92,11 +93,7 @@ class PesertaImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            $passwordPlain = match (true) {
-                strcasecmp($data['password'], 'acak') === 0 => Str::password(10, symbols: false),
-                $data['password'] !== '' => $data['password'],
-                default => $data['noreg'],
-            };
+            $passwordPlain = PasswordPeserta::generate();
 
             $peserta = Peserta::create([
                 'jenjang_id' => $jenjang->id,
@@ -107,9 +104,7 @@ class PesertaImport implements ToCollection, WithHeadingRow
                 'password_plain' => $passwordPlain,
             ]);
 
-            if (strcasecmp($data['password'], 'acak') === 0) {
-                $this->generatedPasswords[$peserta->noreg] = $passwordPlain;
-            }
+            $this->generatedPasswords[$peserta->noreg] = $passwordPlain;
 
             $this->daftarkanLomba($peserta, $jenjang, $row, $baris);
 

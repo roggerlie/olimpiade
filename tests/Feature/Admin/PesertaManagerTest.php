@@ -26,9 +26,38 @@ test('it validates required fields before creating', function () {
     Livewire::test('admin.peserta.manager')
         ->call('create')
         ->call('save')
-        ->assertHasErrors(['noreg' => 'required', 'nama' => 'required', 'jenjangId' => 'required', 'asalSekolah' => 'required', 'password' => 'required']);
+        ->assertHasErrors(['noreg' => 'required', 'nama' => 'required', 'jenjangId' => 'required', 'asalSekolah' => 'required'])
+        ->assertHasNoErrors('password');
 
     expect(Peserta::count())->toBe(0);
+});
+
+test('creating a peserta with the password left blank generates one', function () {
+    actingAsAdmin();
+    $jenjang = Jenjang::factory()->create();
+
+    $component = Livewire::test('admin.peserta.manager')
+        ->call('create')
+        ->set('noreg', '1000000001')
+        ->set('nama', 'Budi Santoso')
+        ->set('jenjangId', $jenjang->id)
+        ->set('asalSekolah', 'SD Contoh')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $peserta = Peserta::where('noreg', '1000000001')->first();
+    expect($peserta->password_plain)->toMatch(PASSWORD_PESERTA_PATTERN)
+        ->and(Hash::check($peserta->password_plain, $peserta->password))->toBeTrue();
+    $component->assertSet('statusMessage', "Peserta ditambahkan. Password: {$peserta->password_plain}");
+});
+
+test('the acak button fills the password field with a generated password', function () {
+    actingAsAdmin();
+
+    Livewire::test('admin.peserta.manager')
+        ->call('create')
+        ->call('acakPassword')
+        ->assertSet('password', fn (string $password) => preg_match(PASSWORD_PESERTA_PATTERN, $password) === 1);
 });
 
 test('it creates a peserta with a working login', function () {
@@ -136,7 +165,7 @@ test('it updates the noreg used to log in', function () {
     expect($peserta->fresh()->noreg)->toBe('2000000002');
 });
 
-test('resetting a peserta password sets it back to their noreg', function () {
+test('resetting a peserta password generates a new one instead of using their noreg', function () {
     actingAsAdmin();
     $peserta = Peserta::factory()->create(['noreg' => '1000000001', 'password' => Hash::make('rahasia-lama')]);
 
@@ -144,7 +173,95 @@ test('resetting a peserta password sets it back to their noreg', function () {
         ->call('resetPassword', $peserta->id)
         ->assertSet('errorMessage', null);
 
-    expect(Hash::check('1000000001', $peserta->fresh()->password))->toBeTrue();
+    $peserta->refresh();
+    expect($peserta->password_plain)->toMatch(PASSWORD_PESERTA_PATTERN)
+        ->and(Hash::check($peserta->password_plain, $peserta->password))->toBeTrue()
+        ->and(Hash::check('rahasia-lama', $peserta->password))->toBeFalse()
+        ->and(Hash::check('1000000001', $peserta->password))->toBeFalse();
+});
+
+test('acak ulang password only regenerates passwords of the ticked peserta', function () {
+    actingAsAdmin();
+    [$dicentang, $lainDicentang, $tidakDicentang] = Peserta::factory()->count(3)->create()->all();
+
+    Livewire::test('admin.peserta.manager')
+        ->set('selectedIds', [(string) $dicentang->id, (string) $lainDicentang->id])
+        ->call('acakUlangPasswordMassal')
+        ->assertSet('statusMessage', 'Password 2 peserta berhasil diacak ulang. Klik Export Terpilih untuk mencetak daftarnya.')
+        // Kept, so "Export Terpilih" prints exactly these peserta next.
+        ->assertSet('selectedIds', [(string) $dicentang->id, (string) $lainDicentang->id])
+        ->assertSeeHtml(e(route('admin.peserta.export', ['ids' => [(string) $dicentang->id, (string) $lainDicentang->id]])))
+        ->assertSee('Export Terpilih (2)');
+
+    foreach ([$dicentang, $lainDicentang] as $peserta) {
+        $peserta->refresh();
+        expect($peserta->password_plain)->toMatch(PASSWORD_PESERTA_PATTERN)
+            ->and(Hash::check($peserta->password_plain, $peserta->password))->toBeTrue();
+    }
+
+    // The factory's default credentials, left untouched.
+    expect($tidakDicentang->fresh()->password_plain)->toBe('password');
+});
+
+test('acak ulang password with nothing ticked changes no one', function () {
+    actingAsAdmin();
+    $peserta = Peserta::factory()->create();
+
+    Livewire::test('admin.peserta.manager')
+        ->call('acakUlangPasswordMassal')
+        ->assertSet('errorMessage', 'Centang dulu peserta yang password-nya mau diacak ulang.')
+        ->assertSet('statusMessage', null);
+
+    expect($peserta->fresh()->password_plain)->toBe('password');
+});
+
+test('the header checkbox ticks every peserta on the current page, then clears them', function () {
+    actingAsAdmin();
+    $halamanPertama = Peserta::factory()->count(11)->create()->sortBy('noreg')->take(10)->pluck('id')->all();
+
+    Livewire::test('admin.peserta.manager')
+        ->call('toggleSemuaDiHalaman')
+        ->assertSet('selectedIds', fn (array $ids) => collect($ids)->sort()->values()->all() === collect($halamanPertama)->sort()->values()->all())
+        ->call('toggleSemuaDiHalaman')
+        ->assertSet('selectedIds', []);
+});
+
+test('ticked peserta are cleared when the page or the filter changes', function () {
+    actingAsAdmin();
+    $peserta = Peserta::factory()->count(11)->create();
+
+    Livewire::test('admin.peserta.manager')
+        ->set('selectedIds', [(string) $peserta->first()->id])
+        ->call('nextPage')
+        ->assertSet('selectedIds', [])
+        ->set('selectedIds', [(string) $peserta->last()->id])
+        ->set('search', 'Budi')
+        ->assertSet('selectedIds', [])
+        ->set('selectedIds', [(string) $peserta->last()->id])
+        ->set('filterPelajaranId', (string) Pelajaran::factory()->create()->id)
+        ->assertSet('selectedIds', []);
+});
+
+test('the pelajaran filter lists only peserta with that pelajaran, combinable with the jenjang filter', function () {
+    actingAsAdmin();
+    $slta = Jenjang::factory()->create();
+    $matematika = Pelajaran::factory()->create(['nama' => 'Matematika']);
+    $ipa = Pelajaran::factory()->create(['nama' => 'IPA']);
+
+    $cocok = Peserta::factory()->create(['jenjang_id' => $slta->id, 'nama' => 'Cocok Semua']);
+    $cocok->pelajaranLomba()->attach([$matematika->id, $ipa->id]);
+    Peserta::factory()->create(['jenjang_id' => $slta->id, 'nama' => 'Pelajaran Lain'])->pelajaranLomba()->attach($ipa->id);
+    Peserta::factory()->create(['nama' => 'Jenjang Lain'])->pelajaranLomba()->attach($matematika->id);
+    Peserta::factory()->create(['jenjang_id' => $slta->id, 'nama' => 'Tanpa Pelajaran']);
+
+    Livewire::test('admin.peserta.manager')
+        ->set('filterJenjangId', (string) $slta->id)
+        ->set('filterPelajaranId', (string) $matematika->id)
+        ->assertSee('Cocok Semua')
+        ->assertDontSee('Pelajaran Lain')
+        ->assertDontSee('Jenjang Lain')
+        ->assertDontSee('Tanpa Pelajaran')
+        ->assertSeeHtml(e(route('admin.peserta.export', ['jenjang' => $slta->id, 'pelajaran' => $matematika->id])));
 });
 
 test('deleting a peserta removes their login account', function () {

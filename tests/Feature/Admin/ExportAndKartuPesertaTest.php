@@ -1,12 +1,18 @@
 <?php
 
+use App\Exports\PesertaExport;
 use App\Exports\PesertaUjianExport;
 use App\Models\Jenjang;
+use App\Models\Pelajaran;
 use App\Models\Peserta;
 use App\Models\PesertaUjian;
 use App\Models\Ujian;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Maatwebsite\Excel\Excel as ExcelWriter;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 uses(RefreshDatabase::class);
 
@@ -30,13 +36,27 @@ test('it downloads nilai for the given ujian only', function () {
     });
 });
 
-test('kartu peserta index lists all jenjang as filter options', function () {
+test('kartu peserta index lists all jenjang and pelajaran as filter options', function () {
     actingAsAdmin();
     Jenjang::factory()->create(['nama' => 'Sekolah Dasar']);
+    Pelajaran::factory()->create(['nama' => 'Bahasa Inggris']);
 
     $this->get(route('admin.kartu-peserta.index'))
         ->assertOk()
-        ->assertSee('Sekolah Dasar');
+        ->assertSee('Sekolah Dasar')
+        ->assertSee('Bahasa Inggris');
+});
+
+test('kartu peserta cetak shows only peserta with the selected pelajaran', function () {
+    actingAsAdmin();
+    $matematika = Pelajaran::factory()->create();
+    Peserta::factory()->create(['nama' => 'Peserta Matematika'])->pelajaranLomba()->attach($matematika->id);
+    Peserta::factory()->create(['nama' => 'Peserta Lain'])->pelajaranLomba()->attach(Pelajaran::factory()->create()->id);
+
+    $this->get(route('admin.kartu-peserta.cetak', ['pelajaran' => $matematika->id]))
+        ->assertOk()
+        ->assertSee('Peserta Matematika')
+        ->assertDontSee('Peserta Lain');
 });
 
 test('kartu peserta cetak shows only peserta from the selected jenjang', function () {
@@ -71,4 +91,81 @@ test('kartu peserta cetak without a jenjang filter shows every peserta', functio
         ->assertOk()
         ->assertSee('Peserta A')
         ->assertSee('Peserta B');
+});
+
+test('peserta export downloads only peserta matching the list filters, named after the jenjang', function () {
+    actingAsAdmin();
+    $this->travelTo(now()->setDate(2026, 10, 5));
+    $slta = Jenjang::factory()->create(['nama' => 'SLTA']);
+    $budi = Peserta::factory()->create(['jenjang_id' => $slta->id, 'nama' => 'Budi Santoso']);
+    Peserta::factory()->create(['jenjang_id' => $slta->id, 'nama' => 'Siti Aminah']);
+    Peserta::factory()->create(['nama' => 'Budi Lain Jenjang']);
+
+    Excel::fake();
+
+    $this->get(route('admin.peserta.export', ['q' => 'Budi', 'jenjang' => $slta->id]))->assertOk();
+
+    Excel::assertDownloaded('Peserta-SLTA-2026-10-05.xlsx', function (PesertaExport $export) use ($budi) {
+        return $export->query()->pluck('id')->all() === [$budi->id];
+    });
+});
+
+test('peserta export filtered by pelajaran downloads only that pelajaran\'s peserta, named after it', function () {
+    actingAsAdmin();
+    $this->travelTo(now()->setDate(2026, 10, 5));
+    $matematika = Pelajaran::factory()->create(['nama' => 'MATEMATIKA']);
+    $budi = Peserta::factory()->create();
+    $budi->pelajaranLomba()->attach($matematika->id);
+    Peserta::factory()->create()->pelajaranLomba()->attach(Pelajaran::factory()->create()->id);
+
+    Excel::fake();
+
+    $this->get(route('admin.peserta.export', ['pelajaran' => $matematika->id]))->assertOk();
+
+    Excel::assertDownloaded('Peserta-MATEMATIKA-2026-10-05.xlsx', function (PesertaExport $export) use ($budi) {
+        return $export->query()->pluck('id')->all() === [$budi->id];
+    });
+});
+
+test('peserta export with ticked ids downloads exactly those peserta, ignoring the list filters', function () {
+    actingAsAdmin();
+    $this->travelTo(now()->setDate(2026, 10, 5));
+    [$dicentang, $lainDicentang, $tidakDicentang] = Peserta::factory()->count(3)->create()->all();
+
+    Excel::fake();
+
+    $this->get(route('admin.peserta.export', [
+        'ids' => [$dicentang->id, $lainDicentang->id],
+        'q' => $tidakDicentang->nama,
+    ]))->assertOk();
+
+    Excel::assertDownloaded('Peserta-Terpilih-2026-10-05.xlsx', function (PesertaExport $export) use ($dicentang, $lainDicentang) {
+        return $export->query()->pluck('id')->sort()->values()->all() === collect([$dicentang->id, $lainDicentang->id])->sort()->values()->all();
+    });
+});
+
+test('peserta export writes login credentials as text so a NISN keeps its leading zero', function () {
+    $jenjang = Jenjang::factory()->create(['nama' => 'SD']);
+    $peserta = Peserta::factory()->create([
+        'jenjang_id' => $jenjang->id,
+        'noreg' => '0123456789',
+        'nama' => 'Budi Santoso',
+        'password_plain' => '346979',
+    ]);
+    $peserta->pelajaranLomba()->attach(Pelajaran::factory()->create(['nama' => 'IPA']));
+
+    $path = tempnam(sys_get_temp_dir(), 'peserta-export').'.xlsx';
+    file_put_contents($path, Excel::raw(new PesertaExport, ExcelWriter::XLSX));
+    $sheet = IOFactory::load($path)->getActiveSheet();
+    unlink($path);
+
+    expect($sheet->rangeToArray('A2:G2')[0])->toBe(['1', '0123456789', 'Budi Santoso', 'SD', $peserta->asal_sekolah, '346979', 'IPA'])
+        ->and($sheet->getCell('B2')->getDataType())->toBe(DataType::TYPE_STRING)
+        ->and($sheet->getCell('F2')->getDataType())->toBe(DataType::TYPE_STRING);
+});
+
+test('a logged-in user without an admin role cannot export peserta credentials', function () {
+    $this->actingAs(User::factory()->create());
+
+    $this->get(route('admin.peserta.export'))->assertForbidden();
 });

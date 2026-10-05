@@ -4,10 +4,10 @@
             <h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-white/90">Import Peserta dari Excel</h3>
             <p class="mb-5 text-sm text-gray-500 dark:text-gray-400">
                 Kolom yang dibutuhkan: <code>noreg</code> (NISN, 10 digit), <code>nama</code>, <code>jenjang</code>
-                (nama jenjang — TK/SD/SLTP/SLTA), <code>asal_sekolah</code>, <code>password</code> (opsional —
-                kosongkan untuk default ke noreg, atau isi <code>acak</code> untuk password random), dan
+                (nama jenjang — TK/SD/SLTP/SLTA), <code>asal_sekolah</code>, dan
                 <code>osains</code> (IPA)/<code>omtk</code> (Matematika)/<code>obing</code> (Bahasa Inggris) (0/1 — mencatat minat ikut lomba mapel
                 itu, dan langsung mendaftarkan ke ujiannya kalau sudah ada untuk jenjangnya).
+                Password tiap peserta selalu dibuat acak otomatis.
                 <a href="{{ route('admin.peserta.template') }}" class="text-brand-500 hover:text-brand-600">Unduh template</a>.
             </p>
 
@@ -18,7 +18,7 @@
             @endif
 
             @if (!empty($generatedPasswords))
-                <x-ui.alert variant="warning" class="mb-4" title="Password yang di-random">
+                <x-ui.alert variant="warning" class="mb-4" title="Password yang dibuat (bisa juga dilihat lewat Export Excel)">
                     <ul class="mt-2 max-h-40 list-disc space-y-1 overflow-y-auto pl-4 font-mono">
                         @foreach ($generatedPasswords as $noreg => $password)
                             <li>{{ $noreg }}: {{ $password }}</li>
