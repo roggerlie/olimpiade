@@ -7,10 +7,18 @@
                 class="border-b-2 px-4 py-2.5 text-sm font-medium">
                 Reset Data
             </button>
+            <button @click="tab = 'kartu-peserta'" :class="tab === 'kartu-peserta' ? 'border-brand-500 text-brand-500' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'"
+                class="border-b-2 px-4 py-2.5 text-sm font-medium">
+                Kartu Peserta
+            </button>
         </div>
 
         <div x-show="tab === 'reset-data'">
             <livewire:admin.pengaturan.reset-data />
+        </div>
+
+        <div x-show="tab === 'kartu-peserta'">
+            <livewire:admin.pengaturan.kartu-peserta />
         </div>
     </div>
 </x-layouts.admin>

@@ -68,6 +68,27 @@ class Peserta extends Authenticatable
             ));
     }
 
+    /**
+     * The kartu peserta's jadwal table: one row per registered ujian, by
+     * start time. Expects pesertaUjian.ujian.pelajaran and
+     * pesertaUjian.ruangan eager-loaded.
+     *
+     * @return list<array{lomba: string, tanggal: string, jam: string, ruangan: ?string}>
+     */
+    public function jadwalKartu(): array
+    {
+        return $this->pesertaUjian
+            ->sortBy('ujian.sesi_mulai')
+            ->map(fn (PesertaUjian $pu) => [
+                'lomba' => $pu->ujian->pelajaran->nama,
+                'tanggal' => $pu->ujian->sesi_mulai->translatedFormat('D, d M'),
+                'jam' => $pu->ujian->sesi_mulai->format('H.i'),
+                'ruangan' => $pu->ruangan?->nama,
+            ])
+            ->values()
+            ->all();
+    }
+
     public function jenjang(): BelongsTo
     {
         return $this->belongsTo(Jenjang::class);

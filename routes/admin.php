@@ -139,13 +139,25 @@ Route::middleware('permission:peserta.manage')->group(function (): void {
 Route::middleware('permission:kartu-peserta.print')->group(function (): void {
     Route::view('kartu-peserta', 'admin.kartu-peserta.index')->name('kartu-peserta.index');
     Route::get('kartu-peserta/cetak', function () {
+        $urutan = in_array(request('urutan'), ['sekolah', 'noreg'], true) ? request('urutan') : 'nama';
+
         $peserta = Peserta::query()
             ->with(['jenjang', 'pesertaUjian.ujian.pelajaran', 'pesertaUjian.ruangan'])
             ->filterAdmin(null, request('jenjang'), request('pelajaran'))
-            ->orderBy('nama')
+            ->when($urutan === 'sekolah', fn ($query) => $query->orderBy('asal_sekolah'))
+            ->orderBy($urutan === 'noreg' ? 'noreg' : 'nama')
             ->get();
 
-        return view('admin.kartu-peserta.cetak', ['peserta' => $peserta]);
+        // Sorted by sekolah, each school starts on its own sheet with a
+        // header — so the stack can be handed out per school after cutting.
+        $kelompok = $urutan === 'sekolah'
+            ? $peserta->groupBy('asal_sekolah')
+            : collect(['' => $peserta]);
+
+        return view('admin.kartu-peserta.cetak', [
+            'jumlah' => $peserta->count(),
+            'kelompok' => $kelompok,
+        ]);
     })->name('kartu-peserta.cetak');
 });
 

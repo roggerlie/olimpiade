@@ -84,10 +84,28 @@ test('kartu peserta cetak lists each registered lomba with its own ruangan', fun
 
     $this->get(route('admin.kartu-peserta.cetak'))
         ->assertOk()
-        ->assertSee('IPA')
-        ->assertSee('Lab Satu')
-        ->assertSee('MATEMATIKA')
-        ->assertSee('Ruangan belum ditentukan');
+        ->assertSeeInOrder(['IPA', 'Lab Satu'])
+        ->assertSeeInOrder(['MATEMATIKA', 'ruangan menyusul']);
+});
+
+test('kartu peserta sorted by sekolah starts each school on its own sheet with its name', function () {
+    actingAsAdmin();
+    Peserta::factory()->create(['nama' => 'Zaki', 'asal_sekolah' => 'SMA Alfa']);
+    Peserta::factory()->create(['nama' => 'Andi', 'asal_sekolah' => 'SMA Beta']);
+    Peserta::factory()->create(['nama' => 'Budi', 'asal_sekolah' => 'SMA Alfa']);
+
+    $this->get(route('admin.kartu-peserta.cetak', ['urutan' => 'sekolah']))
+        ->assertOk()
+        ->assertSeeInOrder(['SMA Alfa', '2 kartu', 'Budi', 'Zaki', 'SMA Beta', '1 kartu', 'Andi']);
+});
+
+test('kartu peserta index shows a sample card', function () {
+    actingAsAdmin();
+
+    $this->get(route('admin.kartu-peserta.index'))
+        ->assertOk()
+        ->assertSee('Contoh Kartu')
+        ->assertSee('7F8PV3');
 });
 
 test('nilai export includes each peserta\'s ruangan', function () {
