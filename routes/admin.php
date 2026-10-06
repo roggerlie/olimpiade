@@ -11,6 +11,7 @@ use App\Models\BankSoal;
 use App\Models\Jenjang;
 use App\Models\Pelajaran;
 use App\Models\Peserta;
+use App\Models\PesertaUjian;
 use App\Models\Soal;
 use App\Models\Ujian;
 use App\Services\LeaderboardService;
@@ -74,6 +75,28 @@ Route::middleware('permission:ujian-peserta.manage')->group(function (): void {
     Route::get('ujian/{ujian}/peserta/export', function (Ujian $ujian) {
         return Excel::download(new PesertaUjianExport($ujian->id), "Nilai-{$ujian->nama}.xlsx");
     })->name('ujian.peserta.export');
+    // Printable, one page per ruangan — or just `?ruangan=` when given.
+    // Peserta not placed in any ruangan yet are left out (and counted on
+    // the page's non-printed header so the admin notices).
+    Route::get('ujian/{ujian}/daftar-hadir', function (Ujian $ujian) {
+        $ujian->load(['jenjang', 'pelajaran']);
+
+        $perRuangan = PesertaUjian::query()
+            ->where('ujian_id', $ujian->id)
+            ->whereNotNull('ruangan_id')
+            ->when(request('ruangan'), fn ($query, $ruanganId) => $query->where('ruangan_id', $ruanganId))
+            ->with(['peserta', 'ruangan'])
+            ->get()
+            ->sortBy('peserta.nama')
+            ->groupBy('ruangan_id')
+            ->sortBy(fn ($kelompok) => $kelompok->first()->ruangan->nama);
+
+        return view('admin.ujian.daftar-hadir', [
+            'ujian' => $ujian,
+            'perRuangan' => $perRuangan,
+            'tanpaRuangan' => request('ruangan') ? 0 : PesertaUjian::query()->where('ujian_id', $ujian->id)->whereNull('ruangan_id')->count(),
+        ]);
+    })->name('ujian.daftar-hadir');
 });
 
 Route::middleware('permission:leaderboard.view')->group(function (): void {
@@ -117,7 +140,7 @@ Route::middleware('permission:kartu-peserta.print')->group(function (): void {
     Route::view('kartu-peserta', 'admin.kartu-peserta.index')->name('kartu-peserta.index');
     Route::get('kartu-peserta/cetak', function () {
         $peserta = Peserta::query()
-            ->with('jenjang')
+            ->with(['jenjang', 'pesertaUjian.ujian.pelajaran', 'pesertaUjian.ruangan'])
             ->filterAdmin(null, request('jenjang'), request('pelajaran'))
             ->orderBy('nama')
             ->get();

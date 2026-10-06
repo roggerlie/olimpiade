@@ -9,6 +9,10 @@
                 class="border-b-2 px-4 py-2.5 text-sm font-medium">
                 Pelajaran
             </button>
+            <button @click="tab = 'ruangan'" :class="tab === 'ruangan' ? 'border-brand-500 text-brand-500' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'"
+                class="border-b-2 px-4 py-2.5 text-sm font-medium">
+                Ruangan
+            </button>
         </div>
 
         <div x-show="tab === 'jenjang'">
@@ -17,6 +21,10 @@
 
         <div x-show="tab === 'pelajaran'">
             <livewire:admin.pelajaran.manager />
+        </div>
+
+        <div x-show="tab === 'ruangan'">
+            <livewire:admin.ruangan.manager />
         </div>
     </div>
 </x-layouts.admin>

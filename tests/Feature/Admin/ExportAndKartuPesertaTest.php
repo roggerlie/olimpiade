@@ -6,6 +6,7 @@ use App\Models\Jenjang;
 use App\Models\Pelajaran;
 use App\Models\Peserta;
 use App\Models\PesertaUjian;
+use App\Models\Ruangan;
 use App\Models\Ujian;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -71,6 +72,31 @@ test('kartu peserta cetak shows only peserta from the selected jenjang', functio
         ->assertSee('Peserta A')
         ->assertSee('1000000001')
         ->assertDontSee('Peserta B');
+});
+
+test('kartu peserta cetak lists each registered lomba with its own ruangan', function () {
+    actingAsAdmin();
+    $peserta = Peserta::factory()->create();
+    $ipa = Ujian::factory()->create(['pelajaran_id' => Pelajaran::factory()->create(['nama' => 'IPA'])->id]);
+    $mtk = Ujian::factory()->create(['pelajaran_id' => Pelajaran::factory()->create(['nama' => 'MATEMATIKA'])->id]);
+    PesertaUjian::factory()->create(['peserta_id' => $peserta->id, 'ujian_id' => $ipa->id, 'ruangan_id' => Ruangan::factory()->create(['nama' => 'Lab Satu'])->id]);
+    PesertaUjian::factory()->create(['peserta_id' => $peserta->id, 'ujian_id' => $mtk->id]);
+
+    $this->get(route('admin.kartu-peserta.cetak'))
+        ->assertOk()
+        ->assertSee('IPA')
+        ->assertSee('Lab Satu')
+        ->assertSee('MATEMATIKA')
+        ->assertSee('Ruangan belum ditentukan');
+});
+
+test('nilai export includes each peserta\'s ruangan', function () {
+    $pesertaUjian = PesertaUjian::factory()->selesai()->create(['ruangan_id' => Ruangan::factory()->create(['nama' => 'Lab Satu'])->id]);
+    $export = new PesertaUjianExport($pesertaUjian->ujian_id);
+
+    $baris = $export->map($export->query()->first());
+
+    expect($baris[array_search('Ruangan', $export->headings(), true)])->toBe('Lab Satu');
 });
 
 test('kartu peserta cetak shows the peserta\'s plaintext password', function () {

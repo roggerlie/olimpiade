@@ -11,6 +11,7 @@ namespace App\Enums;
  *   jenjang, pelajaran ← bank_soal ← soal ← peserta_soal
  *                        bank_soal ← ujian ← peserta_ujian ← peserta_soal
  *   jenjang ← peserta ← peserta_ujian, peserta_pelajaran
+ *   ruangan ← peserta_ujian
  *
  * `users`, roles and permissions are never part of any category.
  */
@@ -40,7 +41,7 @@ enum KategoriReset: string
             self::Peserta => 'Akun peserta beserta minat lomba dan arsip file import peserta.',
             self::Ujian => 'Semua jadwal ujian.',
             self::BankSoal => 'Semua bank soal, soal, gambar soal, dan arsip file import soal.',
-            self::MasterData => 'Jenjang dan Pelajaran.',
+            self::MasterData => 'Jenjang, Pelajaran, dan Ruangan.',
         };
     }
 
@@ -72,7 +73,7 @@ enum KategoriReset: string
             self::Peserta => ['peserta_pelajaran', 'peserta'],
             self::Ujian => ['ujian'],
             self::BankSoal => ['soal', 'bank_soal'],
-            self::MasterData => ['pelajaran', 'jenjang'],
+            self::MasterData => ['ruangan', 'pelajaran', 'jenjang'],
         };
     }
 

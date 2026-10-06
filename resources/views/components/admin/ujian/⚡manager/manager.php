@@ -98,7 +98,11 @@ new class extends Component
                 'sesiMulai' => ['required', 'date'],
                 'sesiSelesai' => ['required', 'date', 'after:sesiMulai'],
                 'deskripsi' => ['nullable', 'string'],
-            ]
+            ],
+            attributes: [
+                'sesiMulai' => 'waktu mulai',
+                'sesiSelesai' => 'waktu selesai',
+            ],
         )->after(function ($validator) {
             $bankSoal = BankSoal::withCount('soal')->find($this->bankSoalId);
 

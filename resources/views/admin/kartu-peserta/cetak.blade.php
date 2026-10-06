@@ -14,10 +14,11 @@
             @page { margin: 10mm; }
         }
 
-        /* Standard ID-card size (CR80, ~credit card) */
+        /* A little taller than CR80 to fit the jadwal/ruangan lines — still
+           4 rows x 2 columns per A4 sheet. */
         .kartu-slot {
             width: 89mm;
-            height: 58mm;
+            height: 62mm;
             page-break-inside: avoid;
         }
     </style>
@@ -47,18 +48,31 @@
                             <span class="rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-bold uppercase text-white">{{ $s->jenjang->nama }}</span>
                         </div>
 
-                        <div class="flex flex-1 flex-col justify-between px-4 py-3">
+                        <div class="flex flex-1 flex-col justify-between px-4 py-2">
                             <div>
                                 <p class="text-base font-bold leading-tight text-gray-800">{{ $s->nama }}</p>
                                 <p class="mt-0.5 text-xs text-gray-500">{{ $s->asal_sekolah }}</p>
                             </div>
 
-                            <div class="mt-2 grid grid-cols-2 gap-1.5">
-                                <div class="rounded-lg bg-gray-50 px-2.5 py-2">
+                            {{-- Ruangan is per ujian (PesertaUjian::ruangan()), so list each lomba with its own room & time. --}}
+                            <div class="mt-1 space-y-0.5 text-[8.5px] leading-tight text-gray-700">
+                                @forelse ($s->pesertaUjian->sortBy('ujian.sesi_mulai') as $pu)
+                                    <p>
+                                        <span class="font-semibold">{{ $pu->ujian->pelajaran->nama }}</span>
+                                        · {{ $pu->ruangan?->nama ?? 'Ruangan belum ditentukan' }}
+                                        · {{ $pu->ujian->sesi_mulai->translatedFormat('d M, H:i') }}
+                                    </p>
+                                @empty
+                                    <p class="text-gray-400">Belum terdaftar di ujian.</p>
+                                @endforelse
+                            </div>
+
+                            <div class="mt-1.5 grid grid-cols-2 gap-1.5">
+                                <div class="rounded-lg bg-gray-50 px-2.5 py-1.5">
                                     <p class="text-[8px] uppercase tracking-wide text-gray-400">No. Registrasi (NISN)</p>
                                     <p class="font-mono text-sm font-bold tracking-wider text-gray-800">{{ $s->noreg }}</p>
                                 </div>
-                                <div class="rounded-lg bg-gray-50 px-2.5 py-2">
+                                <div class="rounded-lg bg-gray-50 px-2.5 py-1.5">
                                     <p class="text-[8px] uppercase tracking-wide text-gray-400">Password</p>
                                     <p class="font-mono text-sm font-bold tracking-wider text-gray-800">{{ $s->password_plain ?? '—' }}</p>
                                 </div>

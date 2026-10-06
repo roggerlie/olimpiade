@@ -1,5 +1,5 @@
 <div>
-    <x-common.component-card title="Ujian" desc="Jadwal ujian per bank soal — durasi dihitung otomatis dari sesi mulai & selesai.">
+    <x-common.component-card title="Ujian" desc="Jadwal ujian per bank soal — durasi dihitung otomatis dari waktu mulai & selesai.">
         @can('ujian.manage')
             <div class="mb-4 flex justify-end">
                 <x-ui.button wire:click="create">+ Tambah Ujian</x-ui.button>
@@ -20,7 +20,7 @@
                     <tr>
                         <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Ujian</th>
                         <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Jenjang / Pelajaran</th>
-                        <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Sesi</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Waktu</th>
                         <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Durasi</th>
                         <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Status</th>
                         <th class="px-5 py-3 text-right text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Aksi</th>
@@ -112,13 +112,13 @@
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <x-form.date-picker id="ujian-sesi-mulai" label="Sesi Mulai" enable-time date-format="Y-m-d\TH:i" alt-format="d M Y, H:i"
+                        <x-form.date-picker id="ujian-sesi-mulai" label="Waktu Mulai" enable-time date-format="Y-m-d\TH:i" alt-format="d M Y, H:i"
                             wire:model="sesiMulai" placeholder="Pilih tanggal & jam mulai" />
                         @error('sesiMulai') <p class="mt-1 text-sm text-error-500">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
-                        <x-form.date-picker id="ujian-sesi-selesai" label="Sesi Selesai" enable-time date-format="Y-m-d\TH:i" alt-format="d M Y, H:i"
+                        <x-form.date-picker id="ujian-sesi-selesai" label="Waktu Selesai" enable-time date-format="Y-m-d\TH:i" alt-format="d M Y, H:i"
                             wire:model="sesiSelesai" placeholder="Pilih tanggal & jam selesai" />
                         @error('sesiSelesai') <p class="mt-1 text-sm text-error-500">{{ $message }}</p> @enderror
                     </div>

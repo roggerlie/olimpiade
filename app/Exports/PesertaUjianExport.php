@@ -20,7 +20,7 @@ class PesertaUjianExport implements FromQuery, WithHeadings, WithMapping
     public function query(): Builder
     {
         return PesertaUjian::query()
-            ->with('peserta')
+            ->with(['peserta', 'ruangan'])
             ->where('ujian_id', $this->ujianId)
             ->orderByDesc('nilai');
     }
@@ -30,7 +30,7 @@ class PesertaUjianExport implements FromQuery, WithHeadings, WithMapping
      */
     public function headings(): array
     {
-        return ['No. Registrasi', 'Nama', 'Asal Sekolah', 'Waktu Mulai', 'Waktu Selesai', 'Benar', 'Salah', 'Nilai', 'Status'];
+        return ['No. Registrasi', 'Nama', 'Asal Sekolah', 'Ruangan', 'Waktu Mulai', 'Waktu Selesai', 'Benar', 'Salah', 'Nilai', 'Status'];
     }
 
     /**
@@ -42,6 +42,7 @@ class PesertaUjianExport implements FromQuery, WithHeadings, WithMapping
             $pesertaUjian->peserta->noreg,
             $pesertaUjian->peserta->nama,
             $pesertaUjian->peserta->asal_sekolah,
+            $pesertaUjian->ruangan?->nama ?? '-',
             $pesertaUjian->waktu_mulai?->format('Y-m-d H:i:s') ?? '-',
             $pesertaUjian->waktu_selesai?->format('Y-m-d H:i:s') ?? '-',
             $pesertaUjian->benar ?? '-',

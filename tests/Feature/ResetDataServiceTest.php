@@ -8,6 +8,7 @@ use App\Models\Pelajaran;
 use App\Models\Peserta;
 use App\Models\PesertaSoal;
 use App\Models\PesertaUjian;
+use App\Models\Ruangan;
 use App\Models\Soal;
 use App\Models\Ujian;
 use App\Models\User;
@@ -43,7 +44,11 @@ function isiDataLengkap(): PesertaSoal
     ]);
     $peserta = Peserta::factory()->create(['jenjang_id' => $jenjang->id]);
     $peserta->pelajaranLomba()->attach($pelajaran);
-    $attempt = PesertaUjian::factory()->selesai()->create(['peserta_id' => $peserta->id, 'ujian_id' => $ujian->id]);
+    $attempt = PesertaUjian::factory()->selesai()->create([
+        'peserta_id' => $peserta->id,
+        'ujian_id' => $ujian->id,
+        'ruangan_id' => Ruangan::factory()->create()->id,
+    ]);
 
     return PesertaSoal::factory()->create(['peserta_ujian_id' => $attempt->id, 'soal_id' => $soal->id, 'urutan' => 1]);
 }
@@ -87,9 +92,9 @@ test('resetting master data wipes everything except admin accounts', function ()
 
     $hasil = app(ResetDataService::class)->jalankan(['master-data'], $admin);
 
-    expect(Jenjang::count() + Pelajaran::count() + BankSoal::count() + Soal::count() + Ujian::count() + Peserta::count() + PesertaUjian::count())->toBe(0)
+    expect(Jenjang::count() + Pelajaran::count() + Ruangan::count() + BankSoal::count() + Soal::count() + Ujian::count() + Peserta::count() + PesertaUjian::count())->toBe(0)
         ->and(User::whereKey($admin->id)->exists())->toBeTrue()
-        ->and($hasil['terhapus'])->toMatchArray(['jenjang' => 1, 'soal' => 1, 'peserta_soal' => 1]);
+        ->and($hasil['terhapus'])->toMatchArray(['jenjang' => 1, 'ruangan' => 1, 'soal' => 1, 'peserta_soal' => 1]);
 });
 
 test('it removes category files but keeps backups', function () {

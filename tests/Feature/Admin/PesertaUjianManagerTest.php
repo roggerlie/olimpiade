@@ -4,6 +4,7 @@ use App\Models\Jenjang;
 use App\Models\Peserta;
 use App\Models\PesertaSoal;
 use App\Models\PesertaUjian;
+use App\Models\Ruangan;
 use App\Models\Ujian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -146,4 +147,153 @@ test('resetSemua only touches attempts that have actually started', function () 
     $belumMulaiAttempt = PesertaUjian::where('peserta_id', $belumMulai->id)->first();
     expect($belumMulaiAttempt)->not->toBeNull()
         ->and($belumMulaiAttempt->waktu_mulai)->toBeNull();
+});
+
+test('the per-row ruangan dropdown places and unplaces a registered peserta', function () {
+    actingAsAdmin();
+    $jenjang = Jenjang::factory()->create();
+    $ujian = ujianForJenjang($jenjang);
+    $ruangan = Ruangan::factory()->create(['nama' => 'Lab 1']);
+    $pesertaUjian = PesertaUjian::factory()->create([
+        'ujian_id' => $ujian->id,
+        'peserta_id' => Peserta::factory()->create(['jenjang_id' => $jenjang->id])->id,
+    ]);
+
+    $component = Livewire::test('admin.peserta-ujian.manager', ['ujianId' => $ujian->id])
+        ->call('pindahkanRuangan', $pesertaUjian->peserta_id, (string) $ruangan->id);
+
+    expect($pesertaUjian->fresh()->ruangan_id)->toBe($ruangan->id);
+
+    $component->call('pindahkanRuangan', $pesertaUjian->peserta_id, '');
+
+    expect($pesertaUjian->fresh()->ruangan_id)->toBeNull();
+});
+
+test('pindahkan terpilih moves only the ticked peserta, and only for this ujian', function () {
+    actingAsAdmin();
+    $jenjang = Jenjang::factory()->create();
+    $ujian = ujianForJenjang($jenjang);
+    $ujianLain = ujianForJenjang($jenjang);
+    $ruangan = Ruangan::factory()->create(['nama' => 'Lab 1']);
+    [$dicentang, $tidakDicentang] = Peserta::factory()->count(2)->create(['jenjang_id' => $jenjang->id])->all();
+    $daftarDicentang = PesertaUjian::factory()->create(['ujian_id' => $ujian->id, 'peserta_id' => $dicentang->id]);
+    $daftarLain = PesertaUjian::factory()->create(['ujian_id' => $ujian->id, 'peserta_id' => $tidakDicentang->id]);
+    $dicentangDiUjianLain = PesertaUjian::factory()->create(['ujian_id' => $ujianLain->id, 'peserta_id' => $dicentang->id]);
+
+    Livewire::test('admin.peserta-ujian.manager', ['ujianId' => $ujian->id])
+        ->set('selectedIds', [(string) $dicentang->id])
+        ->set('targetRuangan', (string) $ruangan->id)
+        ->call('pindahkanTerpilih')
+        ->assertSet('statusMessage', '1 peserta dipindahkan ke Lab 1.')
+        ->assertSet('selectedIds', []);
+
+    expect($daftarDicentang->fresh()->ruangan_id)->toBe($ruangan->id)
+        ->and($daftarLain->fresh()->ruangan_id)->toBeNull()
+        ->and($dicentangDiUjianLain->fresh()->ruangan_id)->toBeNull();
+});
+
+test('pindahkan terpilih needs both ticked peserta and a target ruangan', function () {
+    actingAsAdmin();
+    $ujian = ujianForJenjang(Jenjang::factory()->create());
+
+    Livewire::test('admin.peserta-ujian.manager', ['ujianId' => $ujian->id])
+        ->call('pindahkanTerpilih')
+        ->assertSet('errorMessage', 'Centang peserta dan pilih ruangan tujuannya dulu.');
+});
+
+test('the ruangan filter lists only peserta in that ruangan, or those not placed yet', function () {
+    actingAsAdmin();
+    $jenjang = Jenjang::factory()->create();
+    $ujian = ujianForJenjang($jenjang);
+    $ruangan = Ruangan::factory()->create();
+    PesertaUjian::factory()->create([
+        'ujian_id' => $ujian->id,
+        'ruangan_id' => $ruangan->id,
+        'peserta_id' => Peserta::factory()->create(['jenjang_id' => $jenjang->id, 'nama' => 'Di Ruangan'])->id,
+    ]);
+    PesertaUjian::factory()->create([
+        'ujian_id' => $ujian->id,
+        'peserta_id' => Peserta::factory()->create(['jenjang_id' => $jenjang->id, 'nama' => 'Tanpa Ruangan'])->id,
+    ]);
+    Peserta::factory()->create(['jenjang_id' => $jenjang->id, 'nama' => 'Belum Terdaftar']);
+
+    Livewire::test('admin.peserta-ujian.manager', ['ujianId' => $ujian->id])
+        ->set('filterRuangan', (string) $ruangan->id)
+        ->assertSee('Di Ruangan')
+        ->assertDontSee('Tanpa Ruangan')
+        ->assertDontSee('Belum Terdaftar')
+        ->set('filterRuangan', 'tanpa')
+        ->assertSee('Tanpa Ruangan')
+        ->assertDontSee('Di Ruangan')
+        ->assertDontSee('Belum Terdaftar');
+});
+
+test('the ruangan summary warns when a room is over kapasitas, without blocking', function () {
+    actingAsAdmin();
+    $jenjang = Jenjang::factory()->create();
+    $ujian = ujianForJenjang($jenjang);
+    $ruangan = Ruangan::factory()->create(['nama' => 'Lab Kecil', 'kapasitas' => 1]);
+    PesertaUjian::factory()->count(2)->create([
+        'ujian_id' => $ujian->id,
+        'ruangan_id' => $ruangan->id,
+        'peserta_id' => fn () => Peserta::factory()->create(['jenjang_id' => $jenjang->id])->id,
+    ]);
+
+    Livewire::test('admin.peserta-ujian.manager', ['ujianId' => $ujian->id])
+        ->assertSeeHtml('<span class="font-semibold">Lab Kecil</span>: 2/1')
+        ->assertSee('melebihi kapasitas');
+});
+
+test('bagi otomatis requires at least one ruangan', function () {
+    actingAsAdmin();
+    $ujian = ujianForJenjang(Jenjang::factory()->create());
+
+    Livewire::test('admin.peserta-ujian.manager', ['ujianId' => $ujian->id])
+        ->call('bukaBagiOtomatis')
+        ->assertSet('showBagiModal', true)
+        ->call('bagiOtomatis')
+        ->assertHasErrors(['bagiRuanganIds' => 'required']);
+});
+
+test('bagi otomatis places unplaced peserta and reports who did not fit', function () {
+    actingAsAdmin();
+    $jenjang = Jenjang::factory()->create();
+    $ujian = ujianForJenjang($jenjang);
+    $ruangan = Ruangan::factory()->create(['kapasitas' => 2]);
+    PesertaUjian::factory()->count(3)->create([
+        'ujian_id' => $ujian->id,
+        'peserta_id' => fn () => Peserta::factory()->create(['jenjang_id' => $jenjang->id])->id,
+    ]);
+
+    Livewire::test('admin.peserta-ujian.manager', ['ujianId' => $ujian->id])
+        ->call('bukaBagiOtomatis')
+        ->set('bagiRuanganIds', [(string) $ruangan->id])
+        ->call('bagiOtomatis')
+        ->assertHasNoErrors()
+        ->assertSet('showBagiModal', false)
+        ->assertSet('statusMessage', '2 peserta dibagi ke ruangan.')
+        ->assertSet('errorMessage', fn (string $message) => str_starts_with($message, '1 peserta belum kebagian ruangan'));
+
+    expect(PesertaUjian::where('ruangan_id', $ruangan->id)->count())->toBe(2);
+});
+
+test('daftar hadir prints one sheet per ruangan, leaving out peserta not placed yet', function () {
+    actingAsAdmin();
+    $ujian = Ujian::factory()->create();
+    $labA = Ruangan::factory()->create(['nama' => 'Lab A']);
+    $labB = Ruangan::factory()->create(['nama' => 'Lab B']);
+    PesertaUjian::factory()->create(['ujian_id' => $ujian->id, 'ruangan_id' => $labA->id, 'peserta_id' => Peserta::factory()->create(['nama' => 'Peserta Lab A'])->id]);
+    PesertaUjian::factory()->create(['ujian_id' => $ujian->id, 'ruangan_id' => $labB->id, 'peserta_id' => Peserta::factory()->create(['nama' => 'Peserta Lab B'])->id]);
+    PesertaUjian::factory()->create(['ujian_id' => $ujian->id, 'peserta_id' => Peserta::factory()->create(['nama' => 'Peserta Tanpa Ruangan'])->id]);
+
+    $this->get(route('admin.ujian.daftar-hadir', $ujian))
+        ->assertOk()
+        ->assertSeeInOrder(['Lab A', 'Peserta Lab A', 'Lab B', 'Peserta Lab B'])
+        ->assertDontSee('Peserta Tanpa Ruangan')
+        ->assertSee('1 peserta terdaftar belum punya ruangan');
+
+    $this->get(route('admin.ujian.daftar-hadir', [$ujian, 'ruangan' => $labB->id]))
+        ->assertOk()
+        ->assertSee('Peserta Lab B')
+        ->assertDontSee('Peserta Lab A');
 });

@@ -51,12 +51,12 @@ test('it creates a new ujian and auto-computes duration from sesi window', funct
         ->and($ujian->durasi_detik)->toBe(7200);
 });
 
-test('it rejects sesi selesai before sesi mulai', function () {
+test('it rejects waktu selesai before waktu mulai, naming both fields as shown on the form', function () {
     actingAsAdmin();
     $bankSoal = BankSoal::factory()->create();
     Soal::factory()->count(3)->create(['bank_soal_id' => $bankSoal->id]);
 
-    Livewire::test('admin.ujian.manager')
+    $component = Livewire::test('admin.ujian.manager')
         ->call('create')
         ->set(array_merge(basePayload($bankSoal), [
             'sesiMulai' => now()->addDay()->addHours(2)->format('Y-m-d\TH:i'),
@@ -64,6 +64,8 @@ test('it rejects sesi selesai before sesi mulai', function () {
         ]))
         ->call('save')
         ->assertHasErrors(['sesiSelesai']);
+
+    expect($component->errors()->first('sesiSelesai'))->toContain('waktu selesai')->toContain('waktu mulai');
 
     expect(Ujian::count())->toBe(0);
 });

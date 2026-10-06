@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 #[Table(name: 'peserta_ujian')]
-#[Fillable(['peserta_id', 'ujian_id', 'waktu_mulai', 'waktu_selesai', 'benar', 'salah', 'nilai'])]
+#[Fillable(['peserta_id', 'ujian_id', 'ruangan_id', 'waktu_mulai', 'waktu_selesai', 'benar', 'salah', 'nilai'])]
 class PesertaUjian extends Model
 {
     /** @use HasFactory<PesertaUjianFactory> */
@@ -35,6 +35,15 @@ class PesertaUjian extends Model
     public function ujian(): BelongsTo
     {
         return $this->belongsTo(Ujian::class);
+    }
+
+    /**
+     * Where this peserta sits for this ujian — null until placed. Per
+     * registration, so it can differ between a peserta's lomba.
+     */
+    public function ruangan(): BelongsTo
+    {
+        return $this->belongsTo(Ruangan::class);
     }
 
     public function pesertaSoal(): HasMany
