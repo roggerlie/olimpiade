@@ -122,6 +122,16 @@
                 <p class="mt-6 animate-pbsf-fade-up text-center text-xs text-[#8e9acb] [animation-delay:.15s] motion-reduce:animate-none">
                     Panca Budi School Festival Volume 04
                 </p>
+
+                {{-- Compact "Didukung oleh" — the brand panel's version is hidden below lg --}}
+                <div class="mt-4 flex animate-pbsf-fade-up flex-col items-center gap-2 [animation-delay:.2s] motion-reduce:animate-none lg:hidden">
+                    <div class="text-[11px] font-semibold tracking-[.16em] text-[#8e9acb] uppercase">Didukung oleh</div>
+                    <div class="flex items-center gap-4 rounded-xl bg-white px-4 py-2.5 shadow-[0_12px_30px_rgba(0,0,0,.3)]">
+                        <img src="/images/pbsf/ion.webp" alt="Institut Olimpiade Nasional" width="448" height="139" class="block h-6 w-auto" />
+                        <span class="h-5 w-px bg-gray-200"></span>
+                        <img src="/images/pbsf/adzkia-kedinasan.webp" alt="Adzkia Kedinasan" class="block h-6" />
+                    </div>
+                </div>
             </div>
         </div>
 

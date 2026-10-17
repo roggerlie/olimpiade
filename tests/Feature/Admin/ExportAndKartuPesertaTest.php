@@ -213,3 +213,12 @@ test('a logged-in user without an admin role cannot export peserta credentials',
 
     $this->get(route('admin.peserta.export'))->assertForbidden();
 });
+
+test('kartu peserta cetak shows the ION co-organizer logo on each card', function () {
+    actingAsAdmin();
+    Peserta::factory()->count(2)->create();
+
+    $response = $this->get(route('admin.kartu-peserta.cetak'))->assertOk();
+
+    expect(substr_count($response->getContent(), 'images/pbsf/ion.webp'))->toBe(2);
+});

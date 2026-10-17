@@ -1,7 +1,8 @@
 {{--
     Right-side PBSF branding for the peserta login page. Transparent — it
     sits on components/auth/pbsf-backdrop — and hidden below lg, where
-    login-peserta shows a compact logo above the form instead.
+    login-peserta shows a compact logo above the form and the "Didukung
+    oleh" logos (ION, Adzkia) below it instead.
 
     `cabangLomba` = pelajaran names, `jenjang` = jenjang names (both from
     master data). Descriptions/icons aren't stored anywhere, so they're
@@ -88,7 +89,9 @@
         {{-- Sponsor --}}
         <div class="mt-auto flex animate-pbsf-fade-up flex-col items-center gap-3 pt-10 [animation-delay:.5s] motion-reduce:animate-none">
             <div class="text-xs font-semibold tracking-[.16em] text-[#8e9acb] uppercase">Didukung oleh</div>
-            <div class="flex items-center rounded-[14px] bg-white px-6 py-3 shadow-[0_12px_30px_rgba(0,0,0,.3)]">
+            <div class="flex items-center gap-5 rounded-[14px] bg-white px-6 py-3 shadow-[0_12px_30px_rgba(0,0,0,.3)]">
+                <img src="/images/pbsf/ion.webp" alt="Institut Olimpiade Nasional" width="448" height="139" class="block h-8 w-auto 2xl:h-9" />
+                <span class="h-7 w-px bg-gray-200"></span>
                 <img src="/images/pbsf/adzkia-kedinasan.webp" alt="Adzkia Kedinasan" class="block h-8 2xl:h-9" />
             </div>
         </div>

@@ -4,6 +4,8 @@
     sample data. Sizes are in mm/pt so print output doesn't depend on the
     screen. Colors: PBSF navy + gold, same palette as the peserta login page.
     Kept deliberately sparse — nama, akun login, jadwal — with room to breathe.
+    The ION (co-organizer) logo sits in the footer, on white, where its red
+    reads better than on the navy header.
 
     `jadwal`: list of ['lomba', 'tanggal', 'jam', 'ruangan'] — one row per
     registered ujian (ruangan is per ujian, see PesertaUjian::ruangan()).
@@ -71,7 +73,10 @@
             @endif
         </div>
 
-        {{-- Petunjuk --}}
-        <p class="mt-auto pb-[2mm] text-center text-[5.5pt] text-gray-400">Bawa kartu ini saat ujian · Jangan bagikan password</p>
+        {{-- Petunjuk + co-organizer --}}
+        <div class="mt-auto flex items-center justify-between gap-[2mm] pb-[1.5mm]">
+            <p class="text-[5.5pt] text-gray-400">Bawa kartu ini saat ujian · Jangan bagikan password</p>
+            <img src="{{ asset('images/pbsf/ion.webp') }}" alt="Institut Olimpiade Nasional" class="h-[4.5mm] w-auto shrink-0">
+        </div>
     </div>
 </div>

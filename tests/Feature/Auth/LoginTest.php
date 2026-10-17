@@ -136,3 +136,10 @@ test('the student login page lists every pelajaran as a cabang lomba open to eve
         ->assertSeeInOrder(['Olimpiade Matematika', 'Logika, aljabar &amp; pemecahan masalah', 'SD', 'SLTP'], false)
         ->assertSeeInOrder(['Olimpiade Astronomi', 'SD', 'SLTP']);
 });
+
+test('the student login page shows the ION co-organizer logo', function () {
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertSee('images/pbsf/ion.webp')
+        ->assertSee('Institut Olimpiade Nasional');
+});
