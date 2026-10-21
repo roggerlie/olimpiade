@@ -13,10 +13,12 @@ use App\Models\Soal;
 use App\Models\Ujian;
 use App\Models\User;
 use App\Services\ResetDataService;
+use App\Support\LogAktivitas;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
+use Spatie\Activitylog\Models\Activity;
 
 uses(RefreshDatabase::class);
 
@@ -145,4 +147,20 @@ test('ids restart at 1 once a table is emptied', function () {
     app(ResetDataService::class)->jalankan(['master-data']);
 
     expect(Jenjang::factory()->create()->id)->toBe(1);
+});
+
+test('a reset is written to the activity log, which itself survives every category', function () {
+    isiDataLengkap();
+    $admin = User::factory()->create();
+    $loginLama = Activity::query()->create(['log_name' => LogAktivitas::AUTH, 'event' => 'login', 'description' => 'Login berhasil']);
+
+    $hasil = app(ResetDataService::class)->jalankan(['master-data'], $admin);
+
+    $log = Activity::query()->where('event', 'reset_data')->sole();
+
+    expect($log->causer->is($admin))->toBeTrue()
+        ->and($log->properties['via'])->toBe('pengaturan')
+        ->and($log->properties['backup'])->toBe(basename($hasil['backup']))
+        ->and($log->properties['terhapus']['peserta'])->toBe(1)
+        ->and($loginLama->fresh())->not->toBeNull();
 });

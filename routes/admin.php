@@ -1,6 +1,7 @@
 <?php
 
 use App\Exports\LeaderboardExport;
+use App\Exports\LogAktivitasExport;
 use App\Exports\PesertaExport;
 use App\Exports\PesertaImportTemplateExport;
 use App\Exports\PesertaUjianExport;
@@ -16,6 +17,7 @@ use App\Models\Soal;
 use App\Models\Ujian;
 use App\Services\LeaderboardService;
 use App\Services\ResetDataService;
+use App\Support\LogAktivitas;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
@@ -163,6 +165,18 @@ Route::middleware('permission:kartu-peserta.print')->group(function (): void {
 
 Route::middleware('permission:users.manage')->group(function (): void {
     Route::view('users', 'admin.users.index')->name('users.index');
+});
+
+Route::middleware('permission:log-aktivitas.view')->group(function (): void {
+    Route::view('log-aktivitas', 'admin.log-aktivitas.index')->name('log-aktivitas.index');
+    // Same `log`/`dari`/`sampai`/`event`/`q` query params as the
+    // Log Aktivitas list's own #[Url] filters.
+    Route::get('log-aktivitas/export', function () {
+        $filter = LogAktivitas::filter(request()->query());
+        $namaFile = collect(['Log', LogAktivitas::LOG[$filter['log']], $filter['dari'], $filter['sampai']])->filter()->join('-');
+
+        return Excel::download(new LogAktivitasExport($filter), str_replace(' ', '-', $namaFile).'.xlsx');
+    })->name('log-aktivitas.export');
 });
 
 // Deliberately gated by role, not a Spatie permission: who's allowed to

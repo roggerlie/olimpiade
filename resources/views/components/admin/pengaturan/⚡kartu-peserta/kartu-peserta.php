@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Pengaturan;
+use App\Support\LogAktivitas;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -41,7 +42,14 @@ new class extends Component
             'qrBaru' => 'gambar QR',
         ]);
 
+        $ketuaLama = Pengaturan::ambil(Pengaturan::KETUA_PELAKSANA);
         Pengaturan::simpan(Pengaturan::KETUA_PELAKSANA, $this->ketuaPelaksana);
+
+        LogAktivitas::admin('ubah_pengaturan', 'Pengaturan kartu peserta diubah', properti: [
+            'old' => ['ketua_pelaksana' => $ketuaLama],
+            'attributes' => ['ketua_pelaksana' => Pengaturan::ambil(Pengaturan::KETUA_PELAKSANA)],
+            'qr_diganti' => (bool) $this->qrBaru,
+        ]);
 
         if ($this->qrBaru) {
             $this->hapusQrUnggahan();
@@ -62,6 +70,7 @@ new class extends Component
 
         $this->hapusQrUnggahan();
         Pengaturan::simpan(Pengaturan::QR_KETUA, null);
+        LogAktivitas::admin('ubah_pengaturan', 'QR ketua pelaksana dikembalikan ke bawaan');
 
         $this->statusMessage = 'QR dikembalikan ke bawaan.';
     }

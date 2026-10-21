@@ -24,6 +24,11 @@
                     Cetak Daftar Hadir
                 </a>
                 <x-ui.button variant="outline" wire:click="bukaBagiOtomatis">Bagi Ruangan Otomatis</x-ui.button>
+                @if ($this->totalWaktuHabis > 0)
+                    <x-ui.button wire:click="selesaikanWaktuHabis" wire:confirm="Selesaikan {{ $this->totalWaktuHabis }} peserta yang waktunya sudah habis tapi belum menekan Selesaikan? Nilai dihitung dari jawaban yang sudah tersimpan.">
+                        Selesaikan yang Waktunya Habis ({{ $this->totalWaktuHabis }})
+                    </x-ui.button>
+                @endif
                 <x-ui.button variant="outline" wire:click="resetSemua" wire:confirm="Reset progres SEMUA peserta yang sudah mulai mengerjakan ujian ini? Jawaban &amp; waktu mereka akan dihapus.">
                     Reset Semua Progres
                 </x-ui.button>
@@ -138,6 +143,8 @@
                                     <x-ui.badge color="light">Belum Terdaftar</x-ui.badge>
                                 @elseif ($pesertaUjian->sudahSubmit())
                                     <x-ui.badge color="success">Selesai</x-ui.badge>
+                                @elseif ($pesertaUjian->waktuHabis())
+                                    <x-ui.badge color="error">Waktu Habis, Belum Diselesaikan</x-ui.badge>
                                 @elseif ($pesertaUjian->waktu_mulai)
                                     <x-ui.badge color="warning">Sedang Mengerjakan</x-ui.badge>
                                 @else
@@ -160,6 +167,13 @@
                                     @if (!$pesertaUjian->waktu_mulai)
                                         <button wire:click="toggleDaftar({{ $peserta->id }})" wire:confirm="Batalkan pendaftaran {{ $peserta->nama }}?" class="mr-3 text-error-500 hover:text-error-600">Batalkan</button>
                                     @else
+                                        @unless ($pesertaUjian->sudahSubmit())
+                                            <button wire:click="selesaikan({{ $peserta->id }})"
+                                                wire:confirm="{{ $pesertaUjian->waktuHabis()
+                                                    ? "Selesaikan ujian {$peserta->nama}? Nilai dihitung dari jawaban yang sudah tersimpan."
+                                                    : "Waktu {$peserta->nama} BELUM habis. Selesaikan ujiannya sekarang? Peserta tidak bisa melanjutkan, nilai dihitung dari jawaban yang sudah tersimpan." }}"
+                                                class="mr-3 text-brand-500 hover:text-brand-600">Selesaikan</button>
+                                        @endunless
                                         <button wire:click="resetProgres({{ $peserta->id }})" wire:confirm="Reset progres {{ $peserta->nama }}? Jawaban &amp; waktu yang sudah tercatat akan dihapus." class="text-error-500 hover:text-error-600">Reset</button>
                                     @endif
                                 @endif

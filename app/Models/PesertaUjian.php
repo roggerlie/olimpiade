@@ -53,7 +53,8 @@ class PesertaUjian extends Model
 
     /**
      * A submission is final once `waktu_selesai` is recorded — either the
-     * student submitted manually or the auto-submit scheduler closed it out.
+     * student submitted, their exam page found the time up, or an
+     * admin/operator closed it out (see App\Services\ScoringService).
      */
     public function sudahSubmit(): bool
     {

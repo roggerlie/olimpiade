@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Support\LogAktivitas;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -62,6 +63,7 @@ new class extends Component
                         ->orWhere('username', 'like', "%{$this->search}%");
                 });
             })
+            ->withLoginTerakhir()
             ->orderBy('name')
             ->get();
     }
@@ -119,6 +121,8 @@ new class extends Component
                 return;
             }
 
+            $roleLama = $user->getRoleNames()->first();
+
             $user->update(array_filter([
                 'name' => $data['nama'],
                 'username' => $data['username'],
@@ -132,6 +136,10 @@ new class extends Component
             ]);
             $user->syncRoles([$data['role']]);
 
+            if ($roleLama !== $data['role']) {
+                $this->catatRole($user, $roleLama, $data['role']);
+            }
+
             $this->statusMessage = 'Pengguna diperbarui.';
         } else {
             $user = User::create([
@@ -141,6 +149,7 @@ new class extends Component
                 'password' => Hash::make($data['password']),
             ]);
             $user->assignRole($data['role']);
+            $this->catatRole($user, null, $data['role']);
 
             $this->statusMessage = 'Pengguna ditambahkan.';
         }
@@ -189,6 +198,18 @@ new class extends Component
         return $user->hasRole('administrator')
             && $roleBaru !== 'administrator'
             && User::role('administrator')->count() <= 1;
+    }
+
+    /**
+     * Roles live in Spatie's pivot table, which the User model's own
+     * activity log (App\Models\Concerns\CatatAktivitas) never sees.
+     */
+    private function catatRole(User $user, ?string $roleLama, string $roleBaru): void
+    {
+        LogAktivitas::admin('ubah_role', "Role {$user->name} ({$user->username}) diatur ke ".(self::ROLES[$roleBaru] ?? $roleBaru), $user, [
+            'old' => ['role' => $roleLama],
+            'attributes' => ['role' => $roleBaru],
+        ]);
     }
 
     private function resetForm(): void

@@ -4,8 +4,11 @@ namespace App\Providers;
 
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Console\ServeCommand;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,6 +34,13 @@ class AppServiceProvider extends ServiceProvider
         // (the `peserta` guard's user, see App\Models\Peserta) — which has no
         // Spatie roles at all, hence the User instanceof guard below.
         Gate::before(fn ($user, string $ability) => $user instanceof User && $user->hasRole('administrator') ? true : null);
+
+        // `throttle:login` on both login forms (routes/auth.php) — only a
+        // coarse per-IP ceiling against spraying many noreg from one machine.
+        // Deliberately generous: a whole school lab usually shares one public
+        // IP and logs in at once when the session opens. The real brute-force
+        // guard is per username + IP, see LoginRequest::ensureIsNotRateLimited().
+        RateLimiter::for('login', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
 
         // Force Indonesian for date/duration formatting (Carbon's translatedFormat()/
         // diffForHumans(), used across Ujian, Peserta-Ujian, and CBT views), matching

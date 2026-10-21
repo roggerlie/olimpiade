@@ -9,7 +9,7 @@ test('administrator sees every menu group', function () {
     actingAsAdmin();
 
     expect(array_column(AdminMenu::groups(), 'title'))->toBe(['Menu', 'Ujian', 'Peserta', 'Sistem'])
-        ->and(array_column(AdminMenu::groups()[3]['items'], 'name'))->toBe(['Kelola Pengguna', 'Kelola Peran', 'Pengaturan']);
+        ->and(array_column(AdminMenu::groups()[3]['items'], 'name'))->toBe(['Kelola Pengguna', 'Kelola Peran', 'Log Aktivitas', 'Pengaturan']);
 });
 
 test('a group with no item the user may see is dropped, never left empty', function () {

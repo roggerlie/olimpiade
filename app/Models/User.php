@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Concerns\CatatAktivitas;
+use App\Models\Concerns\PunyaLoginTerakhir;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -16,7 +18,22 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable;
+    use CatatAktivitas, HasFactory, HasRoles, Notifiable, PunyaLoginTerakhir;
+
+    protected function atributDicatat(): array
+    {
+        return ['name', 'username', 'email', 'password'];
+    }
+
+    protected function jenisAktivitas(): string
+    {
+        return 'Pengguna';
+    }
+
+    public function labelAktivitas(): string
+    {
+        return "{$this->name} ({$this->username})";
+    }
 
     /**
      * Get the attributes that should be cast.

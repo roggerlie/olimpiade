@@ -121,7 +121,7 @@ class ExamController extends Controller
         }
 
         if ($pesertaUjian->waktuHabis()) {
-            $scoring->submit($pesertaUjian);
+            $scoring->submit($pesertaUjian, otomatis: true);
 
             return redirect()->route('cbt.ujian.hasil', $pesertaUjian)
                 ->with('error', 'Waktu ujian sudah habis, jawabanmu otomatis diselesaikan.');

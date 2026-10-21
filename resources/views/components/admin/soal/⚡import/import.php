@@ -2,7 +2,9 @@
 
 use App\Imports\SoalImport;
 use App\Imports\SoalWordImport;
+use App\Models\BankSoal;
 use App\Support\ImportArchive;
+use App\Support\LogAktivitas;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -70,13 +72,26 @@ new class extends Component
 
         $fullPath = ImportArchive::store($this->file, "soal/{$this->bankSoalId}");
 
-        if ($ekstensi === 'docx') {
-            $importer = new SoalWordImport($this->bankSoalId);
-            $importer->import($fullPath);
-        } else {
-            $importer = new SoalImport($this->bankSoalId);
-            Excel::import($importer, $fullPath);
-        }
+        // One summary entry instead of a "Soal dibuat" per row.
+        $importer = activity()->withoutLogs(function () use ($ekstensi, $fullPath) {
+            if ($ekstensi === 'docx') {
+                $importer = new SoalWordImport($this->bankSoalId);
+                $importer->import($fullPath);
+            } else {
+                $importer = new SoalImport($this->bankSoalId);
+                Excel::import($importer, $fullPath);
+            }
+
+            return $importer;
+        });
+
+        $bankSoal = BankSoal::find($this->bankSoalId);
+
+        LogAktivitas::admin('import_soal', "Import {$importer->imported} soal ke bank soal {$bankSoal?->nama}", $bankSoal, [
+            'file' => $this->file->getClientOriginalName(),
+            'jumlah' => $importer->imported,
+            'gagal' => count($importer->errors),
+        ]);
 
         $this->imported = $importer->imported;
         $this->importErrors = $importer->errors;

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CatatAktivitas;
+use App\Models\Concerns\PunyaLoginTerakhir;
 use Database\Factories\PesertaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -35,7 +37,22 @@ use Illuminate\Notifications\Notifiable;
 class Peserta extends Authenticatable
 {
     /** @use HasFactory<PesertaFactory> */
-    use HasFactory, Notifiable;
+    use CatatAktivitas, HasFactory, Notifiable, PunyaLoginTerakhir;
+
+    protected function atributDicatat(): array
+    {
+        return ['jenjang_id', 'noreg', 'nama', 'asal_sekolah', 'password'];
+    }
+
+    protected function jenisAktivitas(): string
+    {
+        return 'Peserta';
+    }
+
+    public function labelAktivitas(): string
+    {
+        return "{$this->nama} ({$this->noreg})";
+    }
 
     protected function casts(): array
     {

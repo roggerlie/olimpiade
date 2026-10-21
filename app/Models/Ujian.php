@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CatatAktivitas;
 use Database\Factories\UjianFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -18,7 +19,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Ujian extends Model
 {
     /** @use HasFactory<UjianFactory> */
-    use HasFactory;
+    use CatatAktivitas, HasFactory;
+
+    protected function atributDicatat(): array
+    {
+        return ['bank_soal_id', 'jenjang_id', 'pelajaran_id', 'nama', 'jumlah_soal', 'durasi_detik', 'sesi_mulai', 'sesi_selesai', 'deskripsi'];
+    }
+
+    protected function jenisAktivitas(): string
+    {
+        return 'Ujian';
+    }
+
+    public function labelAktivitas(): string
+    {
+        return $this->nama;
+    }
 
     protected function casts(): array
     {

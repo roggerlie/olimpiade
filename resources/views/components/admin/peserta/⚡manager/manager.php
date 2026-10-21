@@ -78,6 +78,7 @@ new class extends Component
         return Peserta::query()
             ->with(['jenjang', 'pelajaranLomba'])
             ->filterAdmin($this->search, $this->filterJenjangId, $this->filterPelajaranId)
+            ->withLoginTerakhir()
             ->orderBy('noreg')
             ->paginate(10);
     }

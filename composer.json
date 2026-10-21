@@ -17,6 +17,7 @@
         "maatwebsite/excel": "^4.0",
         "mews/purifier": "^3.4",
         "phpoffice/phpword": "^1.4",
+        "spatie/laravel-activitylog": "4.12",
         "spatie/laravel-permission": "^8.3"
     },
     "require-dev": {

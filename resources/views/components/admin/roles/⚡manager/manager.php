@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\LogAktivitas;
 use Spatie\Permission\Models\Role;
 
 new class extends \Livewire\Component
@@ -37,6 +38,7 @@ new class extends \Livewire\Component
         'leaderboard.view' => 'Lihat Leaderboard',
         'peserta.manage' => 'Kelola Peserta',
         'kartu-peserta.print' => 'Cetak Kartu Peserta',
+        'log-aktivitas.view' => 'Lihat Log Aktivitas (login, aktivitas admin & ujian)',
     ];
 
     /**
@@ -110,7 +112,20 @@ new class extends \Livewire\Component
                 ->filter(fn (string $permission) => $checkedKeys->contains(self::safeKey($permission)))
                 ->all();
 
-            Role::findOrCreate($roleName, 'web')->syncPermissions($granted);
+            $role = Role::findOrCreate($roleName, 'web');
+            $sebelumnya = $role->permissions->pluck('name')->all();
+
+            $role->syncPermissions($granted);
+
+            $diberikan = array_values(array_diff($granted, $sebelumnya));
+            $dicabut = array_values(array_diff($sebelumnya, $granted));
+
+            if ($diberikan !== [] || $dicabut !== []) {
+                LogAktivitas::admin('ubah_peran', "Hak akses peran {$roleName} diubah", $role, [
+                    'diberikan' => $diberikan,
+                    'dicabut' => $dicabut,
+                ]);
+            }
         }
 
         $this->statusMessage = 'Pengaturan peran disimpan.';

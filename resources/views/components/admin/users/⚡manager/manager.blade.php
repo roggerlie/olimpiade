@@ -25,6 +25,7 @@
                         <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Username</th>
                         <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Email</th>
                         <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Role</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Login Terakhir</th>
                         <th class="px-5 py-3 text-right text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Aksi</th>
                     </tr>
                 </thead>
@@ -49,6 +50,7 @@
                                     default => 'light',
                                 }">{{ $this->rolePilihan[$peran] ?? $peran }}</x-ui.badge>
                             </td>
+                            <td class="whitespace-nowrap px-5 py-3 text-sm text-gray-700 dark:text-gray-300"><x-common.login-terakhir :waktu="$user->login_terakhir" /></td>
                             <td class="px-5 py-3 text-right text-sm">
                                 <x-common.table-actions>
                                     <x-common.dropdown-item wire:click="edit({{ $user->id }})">Ubah</x-common.dropdown-item>
@@ -58,7 +60,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-5 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                            <td colspan="6" class="px-5 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
                                 @if ($search)
                                     Tidak ada pengguna yang cocok dengan pencarian "{{ $search }}".
                                 @else

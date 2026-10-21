@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Jenjang;
 use App\Models\Pelajaran;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,12 +49,17 @@ class AuthenticatedSessionController extends Controller
             'password' => $request->string('password'),
         ];
 
+        $request->ensureIsNotRateLimited();
+
         if (! Auth::guard('peserta')->attempt($credentials, $request->boolean('remember'))) {
+            $request->catatGagal();
+
             throw ValidationException::withMessages([
                 'username' => 'No. Registrasi atau password salah.',
             ]);
         }
 
+        $request->bersihkanPercobaan();
         $request->session()->regenerate();
 
         return redirect()->intended(route('cbt.dashboard'));
@@ -66,21 +72,32 @@ class AuthenticatedSessionController extends Controller
     public function storeAdmin(LoginRequest $request): RedirectResponse
     {
         $credentials = $request->only('username', 'password');
+        $guard = Auth::guard('web');
 
-        if (! Auth::guard('web')->attempt($credentials, $request->boolean('remember'))) {
+        $request->ensureIsNotRateLimited();
+
+        // attemptWhen(), not attempt() + a role check afterwards: an account
+        // without an admin-tier role is never logged in at all, so the log
+        // records one failed login (see App\Listeners\CatatAktivitasLogin)
+        // instead of a successful login immediately followed by a logout.
+        $berhasil = $guard->attemptWhen(
+            $credentials,
+            fn (User $user) => $user->hasAnyRole(['administrator', 'admin', 'operator']),
+            $request->boolean('remember'),
+        );
+
+        if (! $berhasil) {
+            $request->catatGagal();
+
+            $user = $guard->getLastAttempted();
+            $tanpaAkses = $user && $guard->getProvider()->validateCredentials($user, $credentials);
+
             throw ValidationException::withMessages([
-                'username' => 'Username atau password salah.',
+                'username' => $tanpaAkses ? 'Akun ini tidak memiliki akses ke halaman tersebut.' : 'Username atau password salah.',
             ]);
         }
 
-        if (! Auth::guard('web')->user()->hasAnyRole(['administrator', 'admin', 'operator'])) {
-            Auth::guard('web')->logout();
-
-            throw ValidationException::withMessages([
-                'username' => 'Akun ini tidak memiliki akses ke halaman tersebut.',
-            ]);
-        }
-
+        $request->bersihkanPercobaan();
         $request->session()->regenerate();
 
         return redirect()->intended(route('admin.dashboard'));

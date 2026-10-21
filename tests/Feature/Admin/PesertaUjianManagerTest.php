@@ -5,9 +5,11 @@ use App\Models\Peserta;
 use App\Models\PesertaSoal;
 use App\Models\PesertaUjian;
 use App\Models\Ruangan;
+use App\Models\Soal;
 use App\Models\Ujian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Spatie\Activitylog\Models\Activity;
 
 uses(RefreshDatabase::class);
 
@@ -296,4 +298,68 @@ test('daftar hadir prints one sheet per ruangan, leaving out peserta not placed 
         ->assertOk()
         ->assertSee('Peserta Lab B')
         ->assertDontSee('Peserta Lab A');
+});
+
+test('selesaikan scores and closes one running attempt, even with time left, and logs who did it', function () {
+    $admin = actingAsAdmin();
+    $ujian = Ujian::factory()->create(['durasi_detik' => 3600, 'sesi_mulai' => now()->subMinutes(10), 'sesi_selesai' => now()->addHour()]);
+    $attempt = PesertaUjian::factory()->create(['ujian_id' => $ujian->id, 'waktu_mulai' => now()->subMinutes(5)]);
+    $soal = Soal::factory()->create(['jawaban' => 'A']);
+    PesertaSoal::factory()->create(['peserta_ujian_id' => $attempt->id, 'soal_id' => $soal->id, 'urutan' => 1, 'jawaban' => 'A']);
+
+    Livewire::test('admin.peserta-ujian.manager', ['ujianId' => $ujian->id])
+        ->call('selesaikan', $attempt->peserta_id)
+        ->assertSet('errorMessage', null);
+
+    $attempt->refresh();
+    expect($attempt->sudahSubmit())->toBeTrue()
+        ->and($attempt->nilai)->toEqual(9);
+
+    $log = Activity::query()->where('event', 'submit_ujian')->sole();
+    expect($log->causer->is($attempt->peserta))->toBeTrue()
+        ->and($log->properties['oleh'])->toBe("{$admin->name} ({$admin->username})")
+        ->and($log->properties['otomatis'])->toBeFalse();
+});
+
+test('selesaikan refuses an attempt that has not started or is already finished', function () {
+    actingAsAdmin();
+    $ujian = Ujian::factory()->create();
+    $belumMulai = PesertaUjian::factory()->create(['ujian_id' => $ujian->id]);
+    $selesai = PesertaUjian::factory()->selesai()->create(['ujian_id' => $ujian->id, 'nilai' => 50]);
+
+    Livewire::test('admin.peserta-ujian.manager', ['ujianId' => $ujian->id])
+        ->call('selesaikan', $belumMulai->peserta_id)
+        ->assertSet('errorMessage', 'Peserta ini tidak sedang mengerjakan ujian.')
+        ->call('selesaikan', $selesai->peserta_id)
+        ->assertSet('errorMessage', 'Peserta ini tidak sedang mengerjakan ujian.');
+
+    expect($belumMulai->fresh()->sudahSubmit())->toBeFalse()
+        ->and($selesai->fresh()->nilai)->toEqual(50);
+});
+
+test('selesaikan yang waktunya habis closes only expired attempts, of this ujian only', function () {
+    actingAsAdmin();
+    $ujian = Ujian::factory()->create(['durasi_detik' => 600, 'sesi_mulai' => now()->subHour(), 'sesi_selesai' => now()->addHour()]);
+    $habis = PesertaUjian::factory()->create([
+        'ujian_id' => $ujian->id,
+        'peserta_id' => Peserta::factory()->create(['jenjang_id' => $ujian->jenjang_id])->id,
+        'waktu_mulai' => now()->subMinutes(30),
+    ]);
+    $masihJalan = PesertaUjian::factory()->create(['ujian_id' => $ujian->id, 'waktu_mulai' => now()->subMinutes(2)]);
+    $ujianLain = PesertaUjian::factory()->create([
+        'ujian_id' => Ujian::factory()->create(['durasi_detik' => 600])->id,
+        'waktu_mulai' => now()->subMinutes(30),
+    ]);
+
+    Livewire::test('admin.peserta-ujian.manager', ['ujianId' => $ujian->id])
+        ->assertSee('Selesaikan yang Waktunya Habis (1)')
+        ->assertSee('Waktu Habis, Belum Diselesaikan')
+        ->call('selesaikanWaktuHabis')
+        ->assertSet('statusMessage', '1 peserta yang waktunya habis diselesaikan.')
+        ->assertDontSee('Selesaikan yang Waktunya Habis');
+
+    expect($habis->fresh()->sudahSubmit())->toBeTrue()
+        ->and($masihJalan->fresh()->sudahSubmit())->toBeFalse()
+        ->and($ujianLain->fresh()->sudahSubmit())->toBeFalse()
+        ->and(Activity::query()->where('event', 'submit_ujian')->sole()->properties['otomatis'])->toBeTrue();
 });

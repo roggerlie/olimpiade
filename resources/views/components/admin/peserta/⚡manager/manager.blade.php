@@ -64,6 +64,7 @@
                         <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Asal Sekolah</th>
                         <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Password</th>
                         <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Lomba</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Login Terakhir</th>
                         <th class="px-5 py-3 text-right text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Aksi</th>
                     </tr>
                 </thead>
@@ -88,6 +89,7 @@
                                     @endforelse
                                 </div>
                             </td>
+                            <td class="whitespace-nowrap px-5 py-3 text-sm text-gray-700 dark:text-gray-300"><x-common.login-terakhir :waktu="$peserta->login_terakhir" /></td>
                             <td class="px-5 py-3 text-right text-sm">
                                 <x-common.table-actions>
                                     <x-common.dropdown-item wire:click="edit({{ $peserta->id }})">Ubah</x-common.dropdown-item>
@@ -98,7 +100,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-5 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                            <td colspan="9" class="px-5 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
                                 Belum ada peserta.
                             </td>
                         </tr>

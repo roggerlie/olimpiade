@@ -2,6 +2,7 @@
 
 use App\Imports\PesertaImport;
 use App\Support\ImportArchive;
+use App\Support\LogAktivitas;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -57,7 +58,16 @@ new class extends Component
         ]);
 
         $importer = new PesertaImport;
-        Excel::import($importer, ImportArchive::store($this->file, 'peserta'));
+        $namaFile = $this->file->getClientOriginalName();
+
+        // One summary entry instead of a "Peserta dibuat" per row.
+        activity()->withoutLogs(fn () => Excel::import($importer, ImportArchive::store($this->file, 'peserta')));
+
+        LogAktivitas::admin('import_peserta', "Import {$importer->imported} peserta", properti: [
+            'file' => $namaFile,
+            'jumlah' => $importer->imported,
+            'gagal' => count($importer->errors),
+        ]);
 
         $this->imported = $importer->imported;
         $this->importErrors = $importer->errors;

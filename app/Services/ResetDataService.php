@@ -7,6 +7,7 @@ use App\Exports\BackupSebelumResetExport;
 use App\Models\PesertaUjian;
 use App\Models\Ujian;
 use App\Models\User;
+use App\Support\LogAktivitas;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -126,6 +127,15 @@ class ResetDataService
                 'kategori' => array_map(fn (KategoriReset $k) => $k->value, $kategori),
                 'terhapus' => $terhapus,
                 'backup' => $backup,
+            ]);
+
+            // activity_log itself is never in a KategoriReset, so this entry
+            // (and every one before it) survives the reset it describes.
+            LogAktivitas::catat(LogAktivitas::ADMIN, 'reset_data', 'Reset data dijalankan', $oleh, properti: [
+                'via' => $oleh ? 'pengaturan' : 'console',
+                'kategori' => array_map(fn (KategoriReset $k) => $k->label(), $kategori),
+                'terhapus' => $terhapus,
+                'backup' => basename($backup),
             ]);
 
             return ['backup' => $backup, 'terhapus' => $terhapus];

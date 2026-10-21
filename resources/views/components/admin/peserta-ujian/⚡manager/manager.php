@@ -6,6 +6,8 @@ use App\Models\PesertaUjian;
 use App\Models\Ruangan;
 use App\Models\Ujian;
 use App\Services\PenempatanRuanganService;
+use App\Services\ScoringService;
+use App\Support\LogAktivitas;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -89,7 +91,7 @@ new class extends Component
                     ? $q->whereNull('ruangan_id')
                     : $q->where('ruangan_id', $this->filterRuangan);
             }))
-            ->with(['pesertaUjian' => fn ($q) => $q->where('ujian_id', $this->ujianId)->with('ruangan')])
+            ->with(['pesertaUjian' => fn ($q) => $q->where('ujian_id', $this->ujianId)->with(['ruangan', 'ujian'])])
             ->orderBy('nama')
             ->paginate(15);
     }
@@ -157,6 +159,10 @@ new class extends Component
         $ruangan = $ruanganId === '' ? null : Ruangan::findOrFail($ruanganId);
         $pesertaUjian->update(['ruangan_id' => $ruangan?->id]);
 
+        $this->catat('pindah_ruangan', $ruangan
+            ? "{$pesertaUjian->peserta->nama} ditempatkan di {$ruangan->nama}"
+            : "Ruangan {$pesertaUjian->peserta->nama} dikosongkan", ['peserta' => $pesertaUjian->peserta->noreg, 'ruangan' => $ruangan?->nama]);
+
         $this->statusMessage = $ruangan
             ? "{$pesertaUjian->peserta->nama} ditempatkan di {$ruangan->nama}."
             : "Ruangan {$pesertaUjian->peserta->nama} dikosongkan.";
@@ -183,6 +189,10 @@ new class extends Component
             ->where('ujian_id', $this->ujianId)
             ->whereIn('peserta_id', array_map('intval', $this->selectedIds))
             ->update(['ruangan_id' => $ruangan?->id]);
+
+        $this->catat('pindah_ruangan', $ruangan
+            ? "{$jumlah} peserta dipindahkan ke {$ruangan->nama}"
+            : "Ruangan {$jumlah} peserta dikosongkan", ['jumlah' => $jumlah, 'ruangan' => $ruangan?->nama]);
 
         $this->statusMessage = $ruangan
             ? "{$jumlah} peserta dipindahkan ke {$ruangan->nama}."
@@ -212,6 +222,12 @@ new class extends Component
         ]);
 
         $hasil = $penempatan->bagiOtomatis($this->ujian, $this->bagiRuanganIds, $this->bagiUrutan);
+
+        $this->catat('bagi_ruangan', "{$hasil['ditempatkan']} peserta dibagi otomatis ke ruangan", [
+            'ruangan' => Ruangan::query()->whereIn('id', $this->bagiRuanganIds)->orderBy('nama')->pluck('nama')->all(),
+            'urutan' => $this->bagiUrutan,
+            ...$hasil,
+        ]);
 
         $this->statusMessage = "{$hasil['ditempatkan']} peserta dibagi ke ruangan.";
         $this->errorMessage = $hasil['tidakKebagian'] > 0
@@ -257,6 +273,10 @@ new class extends Component
             }
         });
 
+        if ($pesertaBerminat->isNotEmpty()) {
+            $this->catat('daftar_peserta', "{$pesertaBerminat->count()} peserta yang berminat didaftarkan", ['jumlah' => $pesertaBerminat->count()]);
+        }
+
         $this->statusMessage = "{$pesertaBerminat->count()} peserta yang berminat didaftarkan.";
         $this->errorMessage = null;
         $this->refreshLists();
@@ -277,9 +297,12 @@ new class extends Component
             }
 
             $pesertaUjian->delete();
+            $this->catat('batal_daftar_peserta', "Pendaftaran {$pesertaUjian->peserta->nama} dibatalkan", ['peserta' => $pesertaUjian->peserta->noreg]);
             $this->statusMessage = 'Pendaftaran peserta dibatalkan.';
         } else {
-            PesertaUjian::create(['peserta_id' => $pesertaId, 'ujian_id' => $this->ujianId]);
+            $peserta = Peserta::findOrFail($pesertaId);
+            PesertaUjian::create(['peserta_id' => $peserta->id, 'ujian_id' => $this->ujianId]);
+            $this->catat('daftar_peserta', "{$peserta->nama} didaftarkan", ['peserta' => $peserta->noreg]);
             $this->statusMessage = 'Peserta didaftarkan.';
         }
 
@@ -306,6 +329,7 @@ new class extends Component
         }
 
         $this->resetSatuAttempt($pesertaUjian);
+        $this->catat('reset_progres', "Progres {$pesertaUjian->peserta->nama} direset", ['peserta' => $pesertaUjian->peserta->noreg]);
 
         $this->statusMessage = 'Progres peserta direset.';
         $this->errorMessage = null;
@@ -328,9 +352,77 @@ new class extends Component
             $this->resetSatuAttempt($attempt);
         }
 
+        if ($attempts->isNotEmpty()) {
+            $this->catat('reset_progres', "{$attempts->count()} progres peserta direset", ['jumlah' => $attempts->count()]);
+        }
+
         $this->statusMessage = "{$attempts->count()} progres peserta direset.";
         $this->errorMessage = null;
         $this->refreshLists();
+    }
+
+    /**
+     * Attempts started but never submitted whose time is already up — what
+     * "Selesaikan yang Waktunya Habis" closes out. There's no scheduler doing
+     * this, so a student who closed their browser stays here until then.
+     */
+    #[Computed]
+    public function totalWaktuHabis(): int
+    {
+        return $this->attemptTerbuka()->filter(fn (PesertaUjian $attempt) => $attempt->waktuHabis())->count();
+    }
+
+    /**
+     * Scores and closes one peserta's attempt now, time left or not (e.g.
+     * they went home, or were disqualified). Their answers so far count.
+     */
+    public function selesaikan(int $pesertaId, ScoringService $scoring): void
+    {
+        $pesertaUjian = PesertaUjian::query()
+            ->where('peserta_id', $pesertaId)
+            ->where('ujian_id', $this->ujianId)
+            ->whereNotNull('waktu_mulai')
+            ->whereNull('waktu_selesai')
+            ->first();
+
+        if (! $pesertaUjian) {
+            $this->errorMessage = 'Peserta ini tidak sedang mengerjakan ujian.';
+            $this->statusMessage = null;
+
+            return;
+        }
+
+        $scoring->submit($pesertaUjian, oleh: auth()->user());
+
+        $this->statusMessage = "Ujian {$pesertaUjian->peserta->nama} diselesaikan dengan nilai {$pesertaUjian->nilai}.";
+        $this->errorMessage = null;
+        $this->refreshLists();
+    }
+
+    public function selesaikanWaktuHabis(ScoringService $scoring): void
+    {
+        $habis = $this->attemptTerbuka()->filter(fn (PesertaUjian $attempt) => $attempt->waktuHabis());
+
+        foreach ($habis as $attempt) {
+            $scoring->submit($attempt, otomatis: true, oleh: auth()->user());
+        }
+
+        $this->statusMessage = "{$habis->count()} peserta yang waktunya habis diselesaikan.";
+        $this->errorMessage = null;
+        $this->refreshLists();
+    }
+
+    /**
+     * @return EloquentCollection<int, PesertaUjian>
+     */
+    private function attemptTerbuka(): EloquentCollection
+    {
+        return PesertaUjian::query()
+            ->where('ujian_id', $this->ujianId)
+            ->whereNotNull('waktu_mulai')
+            ->whereNull('waktu_selesai')
+            ->with(['ujian', 'peserta'])
+            ->get();
     }
 
     private function resetSatuAttempt(PesertaUjian $pesertaUjian): void
@@ -348,8 +440,20 @@ new class extends Component
         });
     }
 
+    /**
+     * Admin-log entry about this ujian's registrations — written by hand
+     * because most of these actions are bulk query updates that never fire
+     * model events (see App\Models\Concerns\CatatAktivitas).
+     *
+     * @param  array<string, mixed>  $properti
+     */
+    private function catat(string $event, string $deskripsi, array $properti = []): void
+    {
+        LogAktivitas::admin($event, "{$deskripsi} — {$this->ujian->nama}", $this->ujian, $properti);
+    }
+
     private function refreshLists(): void
     {
-        unset($this->peserta, $this->totalTerdaftar, $this->pemakaianRuangan, $this->totalTanpaRuangan, $this->idsTerdaftarDiHalaman, $this->semuaDiHalamanTerpilih);
+        unset($this->peserta, $this->totalTerdaftar, $this->pemakaianRuangan, $this->totalTanpaRuangan, $this->idsTerdaftarDiHalaman, $this->semuaDiHalamanTerpilih, $this->totalWaktuHabis);
     }
 };

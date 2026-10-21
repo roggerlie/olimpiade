@@ -10,12 +10,12 @@ use Illuminate\Support\Facades\Route;
 // check instead of being bounced to their dashboard. See config/auth.php.
 Route::middleware('guest:peserta')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'createPeserta'])->name('login');
-    Route::post('login', [AuthenticatedSessionController::class, 'storePeserta'])->middleware('throttle:5,1');
+    Route::post('login', [AuthenticatedSessionController::class, 'storePeserta'])->middleware('throttle:login');
 });
 
 Route::middleware('guest:web')->group(function () {
     Route::get('admin/login', [AuthenticatedSessionController::class, 'createAdmin'])->name('admin.login');
-    Route::post('admin/login', [AuthenticatedSessionController::class, 'storeAdmin'])->middleware('throttle:5,1');
+    Route::post('admin/login', [AuthenticatedSessionController::class, 'storeAdmin'])->middleware('throttle:login');
 
     Route::get('auth/google', [GoogleAuthController::class, 'redirect'])->name('admin.login.google');
     Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])->name('admin.login.google.callback');

@@ -42,7 +42,7 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = collect(self::ROLE_PERMISSIONS)->flatten()->unique()->values();
-        $permissions->push('users.manage');
+        $permissions->push('users.manage', 'log-aktivitas.view');
 
         $permissions->each(fn (string $permission) => Permission::findOrCreate($permission, 'web'));
 

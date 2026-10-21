@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CatatAktivitas;
 use Database\Factories\RuanganFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -20,7 +21,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Ruangan extends Model
 {
     /** @use HasFactory<RuanganFactory> */
-    use HasFactory;
+    use CatatAktivitas, HasFactory;
+
+    protected function atributDicatat(): array
+    {
+        return ['nama', 'kapasitas', 'keterangan'];
+    }
+
+    protected function jenisAktivitas(): string
+    {
+        return 'Ruangan';
+    }
+
+    public function labelAktivitas(): string
+    {
+        return $this->nama;
+    }
 
     public function pesertaUjian(): HasMany
     {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CatatAktivitas;
 use Database\Factories\SoalFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -14,7 +15,33 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Soal extends Model
 {
     /** @use HasFactory<SoalFactory> */
-    use HasFactory;
+    use CatatAktivitas, HasFactory;
+
+    protected function atributDicatat(): array
+    {
+        return ['bank_soal_id'];
+    }
+
+    protected function jenisAktivitas(): string
+    {
+        return 'Soal';
+    }
+
+    public function labelAktivitas(): string
+    {
+        return "#{$this->id}";
+    }
+
+    /**
+     * Soal content (pertanyaan/pilihan, HTML with inline base64 images) is
+     * left out of the log on purpose — it would bloat activity_log, and the
+     * answer key has no business in a log operators can read. An edit is
+     * still recorded, just without old → new values.
+     */
+    protected function catatTanpaPerubahanAtribut(): bool
+    {
+        return true;
+    }
 
     public function bankSoal(): BelongsTo
     {

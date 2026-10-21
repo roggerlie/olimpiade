@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CatatAktivitas;
 use Database\Factories\PelajaranFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -15,7 +16,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Pelajaran extends Model
 {
     /** @use HasFactory<PelajaranFactory> */
-    use HasFactory;
+    use CatatAktivitas, HasFactory;
+
+    protected function atributDicatat(): array
+    {
+        return ['nama'];
+    }
+
+    protected function jenisAktivitas(): string
+    {
+        return 'Pelajaran';
+    }
+
+    public function labelAktivitas(): string
+    {
+        return $this->nama;
+    }
 
     public function bankSoal(): HasMany
     {
