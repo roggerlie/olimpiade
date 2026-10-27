@@ -3,7 +3,7 @@
         <form wire:submit="import" class="p-6">
             <h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-white/90">Import Peserta dari Excel</h3>
             <p class="mb-5 text-sm text-gray-500 dark:text-gray-400">
-                Kolom yang dibutuhkan: <code>noreg</code> (NISN, 10 digit), <code>nama</code>, <code>jenjang</code>
+                Kolom yang dibutuhkan: <code>noreg</code> (No. Registrasi, 7 digit), <code>nama</code>, <code>jenjang</code>
                 (nama jenjang — TK/SD/SLTP/SLTA), <code>asal_sekolah</code>, dan
                 <code>osains</code> (IPA)/<code>omtk</code> (Matematika)/<code>obing</code> (Bahasa Inggris) (0/1 — mencatat minat ikut lomba mapel
                 itu, dan langsung mendaftarkan ke ujiannya kalau sudah ada untuk jenjangnya).

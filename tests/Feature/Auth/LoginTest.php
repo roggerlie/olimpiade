@@ -54,10 +54,10 @@ test('an operator can log in through the admin form and reach the admin dashboar
 });
 
 test('a student can log in through the student form (using their noreg) and reach the cbt dashboard', function () {
-    $peserta = Peserta::factory()->create(['noreg' => '1000000001', 'password' => Hash::make('password')]);
+    $peserta = Peserta::factory()->create(['noreg' => '1000001', 'password' => Hash::make('password')]);
 
     $response = $this->post(route('login'), [
-        'username' => '1000000001',
+        'username' => '1000001',
         'password' => 'password',
     ]);
 
@@ -66,10 +66,10 @@ test('a student can log in through the student form (using their noreg) and reac
 });
 
 test('a student cannot log in through the admin form', function () {
-    Peserta::factory()->create(['noreg' => '1000000002', 'password' => Hash::make('password')]);
+    Peserta::factory()->create(['noreg' => '1000002', 'password' => Hash::make('password')]);
 
     $response = $this->post(route('admin.login'), [
-        'username' => '1000000002',
+        'username' => '1000002',
         'password' => 'password',
     ]);
 
@@ -91,10 +91,10 @@ test('an admin cannot log in through the student form', function () {
 });
 
 test('wrong credentials are rejected', function () {
-    Peserta::factory()->create(['noreg' => '1000000003', 'password' => Hash::make('password')]);
+    Peserta::factory()->create(['noreg' => '1000003', 'password' => Hash::make('password')]);
 
     $response = $this->post(route('login'), [
-        'username' => '1000000003',
+        'username' => '1000003',
         'password' => 'wrong-password',
     ]);
 

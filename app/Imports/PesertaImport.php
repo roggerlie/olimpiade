@@ -16,7 +16,7 @@ use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 /**
- * Bulk peserta import. Expects columns: noreg (NISN, 10 digit), nama, jenjang
+ * Bulk peserta import. Expects columns: noreg (No. Registrasi, 7 digit), nama, jenjang
  * (Jenjang.nama — e.g. "SLTA"), asal_sekolah, and three competition flags — osains/omtk/obing (0/1) — that record the
  * peserta's interest in that mapel ("minat lomba", see
  * App\Models\Peserta::pelajaranLomba()) and, if a matching Ujian already
@@ -72,8 +72,8 @@ class PesertaImport implements ToCollection, WithHeadingRow
             ];
 
             $validator = Validator::make($data, [
-                // noreg is a peserta's NISN — also their login id (App\Models\Peserta).
-                'noreg' => ['required', 'string', 'size:10', 'unique:peserta,noreg'],
+                // noreg is a peserta's 7-digit No. Registrasi — also their login id (App\Models\Peserta).
+                'noreg' => ['required', 'digits:7', 'unique:peserta,noreg'],
                 'nama' => ['required', 'string', 'max:255'],
                 'jenjang' => ['required', 'string'],
                 'asal_sekolah' => ['required', 'string', 'max:255'],

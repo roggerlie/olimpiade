@@ -22,7 +22,7 @@ class PesertaImportTemplateExport implements FromArray, WithHeadings
     public function array(): array
     {
         return [
-            ['0123456789', 'Contoh Nama Peserta', 'SLTA', 'SD Contoh', '1', '1', '0'],
+            ['0123456', 'Contoh Nama Peserta', 'SLTA', 'SD Contoh', '1', '1', '0'],
         ];
     }
 }

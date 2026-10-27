@@ -22,7 +22,7 @@ test('it downloads nilai for the given ujian only', function () {
     $ujian = Ujian::factory()->create(['nama' => 'Ujian Matematika']);
     $otherUjian = Ujian::factory()->create();
 
-    $peserta = Peserta::factory()->create(['noreg' => '1000000001', 'nama' => 'Budi Santoso']);
+    $peserta = Peserta::factory()->create(['noreg' => '1000001', 'nama' => 'Budi Santoso']);
     PesertaUjian::factory()->selesai()->create(['peserta_id' => $peserta->id, 'ujian_id' => $ujian->id]);
     PesertaUjian::factory()->selesai()->create(['ujian_id' => $otherUjian->id]);
 
@@ -64,13 +64,13 @@ test('kartu peserta cetak shows only peserta from the selected jenjang', functio
     actingAsAdmin();
     $jenjangA = Jenjang::factory()->create();
     $jenjangB = Jenjang::factory()->create();
-    Peserta::factory()->create(['jenjang_id' => $jenjangA->id, 'noreg' => '1000000001', 'nama' => 'Peserta A']);
-    Peserta::factory()->create(['jenjang_id' => $jenjangB->id, 'noreg' => '2000000002', 'nama' => 'Peserta B']);
+    Peserta::factory()->create(['jenjang_id' => $jenjangA->id, 'noreg' => '1000001', 'nama' => 'Peserta A']);
+    Peserta::factory()->create(['jenjang_id' => $jenjangB->id, 'noreg' => '2000002', 'nama' => 'Peserta B']);
 
     $this->get(route('admin.kartu-peserta.cetak', ['jenjang' => $jenjangA->id]))
         ->assertOk()
         ->assertSee('Peserta A')
-        ->assertSee('1000000001')
+        ->assertSee('1000001')
         ->assertDontSee('Peserta B');
 });
 
@@ -188,11 +188,11 @@ test('peserta export with ticked ids downloads exactly those peserta, ignoring t
     });
 });
 
-test('peserta export writes login credentials as text so a NISN keeps its leading zero', function () {
+test('peserta export writes login credentials as text so a noreg keeps its leading zero', function () {
     $jenjang = Jenjang::factory()->create(['nama' => 'SD']);
     $peserta = Peserta::factory()->create([
         'jenjang_id' => $jenjang->id,
-        'noreg' => '0123456789',
+        'noreg' => '0123456',
         'nama' => 'Budi Santoso',
         'password_plain' => '346979',
     ]);
@@ -203,7 +203,7 @@ test('peserta export writes login credentials as text so a NISN keeps its leadin
     $sheet = IOFactory::load($path)->getActiveSheet();
     unlink($path);
 
-    expect($sheet->rangeToArray('A2:G2')[0])->toBe(['1', '0123456789', 'Budi Santoso', 'SD', $peserta->asal_sekolah, '346979', 'IPA'])
+    expect($sheet->rangeToArray('A2:G2')[0])->toBe(['1', '0123456', 'Budi Santoso', 'SD', $peserta->asal_sekolah, '346979', 'IPA'])
         ->and($sheet->getCell('B2')->getDataType())->toBe(DataType::TYPE_STRING)
         ->and($sheet->getCell('F2')->getDataType())->toBe(DataType::TYPE_STRING);
 });

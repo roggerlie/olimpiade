@@ -157,9 +157,9 @@ new class extends Component
                 'password' => $this->password,
             ],
             [
-                // noreg is a peserta's NISN (10 digits) and their login id
+                // noreg is a peserta's No. Registrasi (7 digits) and their login id
                 // (see App\Models\Peserta).
-                'noreg' => ['required', 'string', 'size:10', Rule::unique('peserta', 'noreg')->ignore($this->editingId)],
+                'noreg' => ['required', 'digits:7', Rule::unique('peserta', 'noreg')->ignore($this->editingId)],
                 'nama' => ['required', 'string', 'max:255'],
                 'jenjangId' => ['required', 'exists:jenjang,id'],
                 'asalSekolah' => ['required', 'string', 'max:255'],
@@ -235,7 +235,7 @@ new class extends Component
      * Gives a peserta a fresh generated password. Peserta have no email on
      * file (see App\Models\Peserta), so there's no self-service "forgot
      * password" link to send; this is the admin-side equivalent. Never
-     * resets to the noreg — a NISN isn't secret, so that'd let anyone log
+     * resets to the noreg — a noreg isn't secret, so that'd let anyone log
      * in as anyone.
      */
     public function resetPassword(int $id): void

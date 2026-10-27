@@ -23,10 +23,10 @@ function logAuth(string $event): Activity
 }
 
 test('a peserta login is logged against the peserta, with guard, IP and device', function () {
-    $peserta = Peserta::factory()->create(['noreg' => '1000000001']);
+    $peserta = Peserta::factory()->create(['noreg' => '1000001']);
 
     $this->withHeader('User-Agent', 'Browser Lab 1')
-        ->post('/login', ['username' => '1000000001', 'password' => 'password'])
+        ->post('/login', ['username' => '1000001', 'password' => 'password'])
         ->assertRedirect(route('cbt.dashboard'));
 
     $log = logAuth('login');
@@ -39,36 +39,36 @@ test('a peserta login is logged against the peserta, with guard, IP and device',
 });
 
 test('the login itself does not show up as a peserta data change', function () {
-    Peserta::factory()->create(['noreg' => '1000000001']);
+    Peserta::factory()->create(['noreg' => '1000001']);
 
     // `remember` makes the guard write a new remember_token onto the row.
-    $this->post('/login', ['username' => '1000000001', 'password' => 'password', 'remember' => '1']);
+    $this->post('/login', ['username' => '1000001', 'password' => 'password', 'remember' => '1']);
 
     expect(Activity::query()->where('log_name', LogAktivitas::ADMIN)->where('event', 'updated')->exists())->toBeFalse();
 });
 
 test('a wrong peserta password is logged as a failed login without the password', function () {
-    $peserta = Peserta::factory()->create(['noreg' => '1000000001']);
+    $peserta = Peserta::factory()->create(['noreg' => '1000001']);
 
-    $this->post('/login', ['username' => '1000000001', 'password' => 'tebakan-salah'])
+    $this->post('/login', ['username' => '1000001', 'password' => 'tebakan-salah'])
         ->assertSessionHasErrors(['username' => 'No. Registrasi atau password salah.']);
 
     $log = logAuth('login_gagal');
 
     expect($log->causer->is($peserta))->toBeTrue()
-        ->and($log->properties['username'])->toBe('1000000001')
+        ->and($log->properties['username'])->toBe('1000001')
         ->and($log->properties['alasan'])->toBe('password_salah')
         ->and(json_encode($log->properties))->not->toContain('tebakan-salah');
     $this->assertGuest('peserta');
 });
 
 test('a login for an unknown noreg is logged anonymously', function () {
-    $this->post('/login', ['username' => '9999999999', 'password' => 'password']);
+    $this->post('/login', ['username' => '9999999', 'password' => 'password']);
 
     $log = logAuth('login_gagal');
 
     expect($log->causer_id)->toBeNull()
-        ->and($log->properties['username'])->toBe('9999999999')
+        ->and($log->properties['username'])->toBe('9999999')
         ->and($log->properties['alasan'])->toBe('akun_tidak_ditemukan');
 });
 
@@ -141,29 +141,29 @@ test('a Google account linked to no admin is logged as a failed login', function
 });
 
 test('five wrong passwords lock that account out for this IP, even with the right password', function () {
-    Peserta::factory()->create(['noreg' => '1000000001']);
+    Peserta::factory()->create(['noreg' => '1000001']);
 
     foreach (range(1, 5) as $percobaan) {
-        $this->post('/login', ['username' => '1000000001', 'password' => 'salah']);
+        $this->post('/login', ['username' => '1000001', 'password' => 'salah']);
     }
 
-    $this->post('/login', ['username' => '1000000001', 'password' => 'password'])
+    $this->post('/login', ['username' => '1000001', 'password' => 'password'])
         ->assertSessionHasErrors('username');
 
     $this->assertGuest('peserta');
     expect(session('errors')->first('username'))->toContain('Terlalu banyak percobaan login')
-        ->and(logAuth('login_diblokir')->properties['username'])->toBe('1000000001');
+        ->and(logAuth('login_diblokir')->properties['username'])->toBe('1000001');
 });
 
 test('one peserta being locked out does not block another peserta on the same IP', function () {
-    Peserta::factory()->create(['noreg' => '1000000001']);
-    $lain = Peserta::factory()->create(['noreg' => '1000000002']);
+    Peserta::factory()->create(['noreg' => '1000001']);
+    $lain = Peserta::factory()->create(['noreg' => '1000002']);
 
     foreach (range(1, 6) as $percobaan) {
-        $this->post('/login', ['username' => '1000000001', 'password' => 'salah']);
+        $this->post('/login', ['username' => '1000001', 'password' => 'salah']);
     }
 
-    $this->post('/login', ['username' => '1000000002', 'password' => 'password'])
+    $this->post('/login', ['username' => '1000002', 'password' => 'password'])
         ->assertRedirect(route('cbt.dashboard'));
 
     $this->assertAuthenticatedAs($lain, 'peserta');

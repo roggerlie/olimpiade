@@ -42,7 +42,7 @@
                 nama="Budi Santoso"
                 asal-sekolah="SMA Negeri 1 Medan"
                 jenjang="SLTA"
-                noreg="0123456789"
+                noreg="0123456"
                 password="7F8PV3"
                 :jadwal="[
                     ['lomba' => 'IPA', 'tanggal' => 'Sab, 12 Okt', 'jam' => '08.00', 'ruangan' => 'Lab Komputer 1'],

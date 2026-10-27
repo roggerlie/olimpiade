@@ -81,10 +81,10 @@ test('campur asal sekolah alternates schools, unlike urut no. registrasi', funct
     $labA = Ruangan::factory()->create(['nama' => 'Lab A', 'kapasitas' => 2]);
     Ruangan::factory()->create(['nama' => 'Lab B', 'kapasitas' => 10]);
 
-    daftarkan($ujian, peserta: ['noreg' => '1000000001', 'nama' => 'Ani', 'asal_sekolah' => 'SMA 1']);
-    daftarkan($ujian, peserta: ['noreg' => '1000000002', 'nama' => 'Budi', 'asal_sekolah' => 'SMA 1']);
-    daftarkan($ujian, peserta: ['noreg' => '1000000003', 'nama' => 'Caca', 'asal_sekolah' => 'SMA 1']);
-    daftarkan($ujian, peserta: ['noreg' => '1000000004', 'nama' => 'Dodi', 'asal_sekolah' => 'SMA 2']);
+    daftarkan($ujian, peserta: ['noreg' => '1000001', 'nama' => 'Ani', 'asal_sekolah' => 'SMA 1']);
+    daftarkan($ujian, peserta: ['noreg' => '1000002', 'nama' => 'Budi', 'asal_sekolah' => 'SMA 1']);
+    daftarkan($ujian, peserta: ['noreg' => '1000003', 'nama' => 'Caca', 'asal_sekolah' => 'SMA 1']);
+    daftarkan($ujian, peserta: ['noreg' => '1000004', 'nama' => 'Dodi', 'asal_sekolah' => 'SMA 2']);
 
     app(PenempatanRuanganService::class)->bagiOtomatis($ujian, Ruangan::pluck('id')->all(), $urutan);
 

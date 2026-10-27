@@ -19,21 +19,21 @@ test('it imports valid rows and creates matching login accounts', function () {
 
     $importer = new PesertaImport;
     $importer->collection(collect([
-        ['noreg' => '1000000001', 'nama' => 'Budi Santoso', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh'],
-        ['noreg' => '1000000002', 'nama' => 'Siti Aminah', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh'],
+        ['noreg' => '1000001', 'nama' => 'Budi Santoso', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh'],
+        ['noreg' => '1000002', 'nama' => 'Siti Aminah', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh'],
     ]));
 
     expect($importer->imported)->toBe(2)
         ->and($importer->errors)->toBeEmpty()
         ->and(Peserta::count())->toBe(2);
 
-    $budi = Peserta::where('noreg', '1000000001')->first();
+    $budi = Peserta::where('noreg', '1000001')->first();
     expect($budi->jenjang_id)->toBe($jenjang->id)
         ->and($budi->password_plain)->toMatch(PASSWORD_PESERTA_PATTERN)
         ->and(Hash::check($budi->password_plain, $budi->password))->toBeTrue()
         ->and($importer->generatedPasswords)->toBe([
-            '1000000001' => $budi->password_plain,
-            '1000000002' => Peserta::where('noreg', '1000000002')->value('password_plain'),
+            '1000001' => $budi->password_plain,
+            '1000002' => Peserta::where('noreg', '1000002')->value('password_plain'),
         ]);
 });
 
@@ -42,10 +42,10 @@ test('it always generates the password, ignoring a password column from an older
 
     $importer = new PesertaImport;
     $importer->collection(collect([
-        ['noreg' => '1000000001', 'nama' => 'Budi Santoso', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh', 'password' => 'passwordku'],
+        ['noreg' => '1000001', 'nama' => 'Budi Santoso', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh', 'password' => 'passwordku'],
     ]));
 
-    $budi = Peserta::where('noreg', '1000000001')->first();
+    $budi = Peserta::where('noreg', '1000001')->first();
 
     expect($budi->password_plain)->toMatch(PASSWORD_PESERTA_PATTERN)
         ->and(Hash::check('passwordku', $budi->password))->toBeFalse();
@@ -56,9 +56,9 @@ test('it reports invalid rows without aborting the whole import', function () {
 
     $importer = new PesertaImport;
     $importer->collection(collect([
-        ['noreg' => '1000000001', 'nama' => 'Baris Valid', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh', 'password' => ''],
+        ['noreg' => '1000001', 'nama' => 'Baris Valid', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh', 'password' => ''],
         ['noreg' => '', 'nama' => 'Tanpa Noreg', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh', 'password' => ''],
-        ['noreg' => '1000000003', 'nama' => 'Jenjang Salah', 'jenjang' => 'Antah Berantah', 'asal_sekolah' => 'SD Contoh', 'password' => ''],
+        ['noreg' => '1000003', 'nama' => 'Jenjang Salah', 'jenjang' => 'Antah Berantah', 'asal_sekolah' => 'SD Contoh', 'password' => ''],
     ]));
 
     expect($importer->imported)->toBe(1)
@@ -66,18 +66,33 @@ test('it reports invalid rows without aborting the whole import', function () {
         ->and(Peserta::count())->toBe(1);
 });
 
-test('it skips rows whose noreg already exists', function () {
+test('it rejects rows whose noreg is not exactly 7 digits', function () {
     Jenjang::factory()->create(['nama' => 'SD']);
-    Peserta::factory()->create(['noreg' => '1000000001']);
 
     $importer = new PesertaImport;
     $importer->collection(collect([
-        ['noreg' => '1000000001', 'nama' => 'Duplikat', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh', 'password' => ''],
+        ['noreg' => '100001', 'nama' => 'Terlalu Pendek', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh'],
+        ['noreg' => '1000000001', 'nama' => 'Terlalu Panjang', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh'],
+        ['noreg' => '10000A1', 'nama' => 'Bukan Angka', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh'],
+    ]));
+
+    expect($importer->imported)->toBe(0)
+        ->and($importer->errors)->toHaveCount(3)
+        ->and(Peserta::count())->toBe(0);
+});
+
+test('it skips rows whose noreg already exists', function () {
+    Jenjang::factory()->create(['nama' => 'SD']);
+    Peserta::factory()->create(['noreg' => '1000001']);
+
+    $importer = new PesertaImport;
+    $importer->collection(collect([
+        ['noreg' => '1000001', 'nama' => 'Duplikat', 'jenjang' => 'SD', 'asal_sekolah' => 'SD Contoh', 'password' => ''],
     ]));
 
     expect($importer->imported)->toBe(0)
         ->and($importer->errors)->toHaveCount(1)
-        ->and(Peserta::where('noreg', '1000000001')->count())->toBe(1);
+        ->and(Peserta::where('noreg', '1000001')->count())->toBe(1);
 });
 
 test('a competition flag records minat lomba and registers the peserta into every matching ujian', function () {
@@ -87,10 +102,10 @@ test('a competition flag records minat lomba and registers the peserta into ever
 
     $importer = new PesertaImport;
     $importer->collection(collect([
-        ['noreg' => '3000000001', 'nama' => 'Budi Santoso', 'jenjang' => 'SLTA', 'asal_sekolah' => 'SMA Contoh', 'password' => '', 'osains' => '0', 'omtk' => '1', 'obing' => '0'],
+        ['noreg' => '3000001', 'nama' => 'Budi Santoso', 'jenjang' => 'SLTA', 'asal_sekolah' => 'SMA Contoh', 'password' => '', 'osains' => '0', 'omtk' => '1', 'obing' => '0'],
     ]));
 
-    $budi = Peserta::where('noreg', '3000000001')->first();
+    $budi = Peserta::where('noreg', '3000001')->first();
 
     expect($importer->notes)->toBeEmpty()
         ->and($budi->pelajaranLomba->pluck('id')->all())->toBe([$matematika->id])
@@ -103,10 +118,10 @@ test('a competition flag with no matching ujian yet still records minat lomba, j
 
     $importer = new PesertaImport;
     $importer->collection(collect([
-        ['noreg' => '3000000001', 'nama' => 'Budi Santoso', 'jenjang' => 'SLTA', 'asal_sekolah' => 'SMA Contoh', 'password' => '', 'osains' => '1', 'omtk' => '0', 'obing' => '0'],
+        ['noreg' => '3000001', 'nama' => 'Budi Santoso', 'jenjang' => 'SLTA', 'asal_sekolah' => 'SMA Contoh', 'password' => '', 'osains' => '1', 'omtk' => '0', 'obing' => '0'],
     ]));
 
-    $budi = Peserta::where('noreg', '3000000001')->first();
+    $budi = Peserta::where('noreg', '3000001')->first();
 
     expect($importer->imported)->toBe(1)
         ->and($importer->errors)->toBeEmpty()

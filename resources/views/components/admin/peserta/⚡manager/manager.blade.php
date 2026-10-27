@@ -122,8 +122,8 @@
 
             <div class="space-y-4">
                 <div>
-                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">No. Registrasi / NISN (10 digit, dipakai untuk login)</label>
-                    <input type="text" wire:model="noreg" maxlength="10"
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">No. Registrasi (7 digit, dipakai untuk login)</label>
+                    <input type="text" wire:model="noreg" maxlength="7" inputmode="numeric"
                         class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
                     @error('noreg') <p class="mt-1 text-sm text-error-500">{{ $message }}</p> @enderror
                 </div>

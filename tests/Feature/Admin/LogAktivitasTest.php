@@ -156,8 +156,8 @@ test('an import is logged as one summary entry, not one per row', function () {
     Jenjang::factory()->create(['nama' => 'SD']);
 
     $csv = "noreg,nama,jenjang,asal_sekolah,password\n"
-        ."1000000001,Budi,SD,SD Contoh,\n"
-        ."1000000002,Citra,SD,SD Contoh,\n";
+        ."1000001,Budi,SD,SD Contoh,\n"
+        ."1000002,Citra,SD,SD Contoh,\n";
 
     Livewire::test('admin.peserta.import')
         ->set('file', UploadedFile::fake()->createWithContent('peserta.csv', $csv))

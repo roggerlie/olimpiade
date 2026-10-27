@@ -45,8 +45,8 @@ test('the same IP with a different browser counts as another device', function (
 });
 
 test('one device used by two peserta is flagged', function () {
-    $budi = Peserta::factory()->create(['nama' => 'Budi', 'noreg' => '1000000001']);
-    $citra = Peserta::factory()->create(['nama' => 'Citra', 'noreg' => '1000000002']);
+    $budi = Peserta::factory()->create(['nama' => 'Budi', 'noreg' => '1000001']);
+    $citra = Peserta::factory()->create(['nama' => 'Citra', 'noreg' => '1000002']);
 
     loginDari($budi, '10.0.0.1');
     loginDari($citra, '10.0.0.1');
@@ -56,7 +56,7 @@ test('one device used by two peserta is flagged', function () {
 
     expect($hasil)->toHaveCount(1)
         ->and($hasil[0]['ip'])->toBe('10.0.0.1')
-        ->and($hasil[0]['pelaku'])->toBe(['Budi (1000000001)', 'Citra (1000000002)']);
+        ->and($hasil[0]['pelaku'])->toBe(['Budi (1000001)', 'Citra (1000002)']);
 });
 
 test('admin logins and logins outside the date range are ignored', function () {

@@ -25,7 +25,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  * out. Laid out print-ready: bordered, landscape, fit to one page wide, and
  * the heading row repeated on every printed page.
  *
- * Extends StringValueBinder so every cell is written as text — a NISN with a
+ * Extends StringValueBinder so every cell is written as text — a noreg with a
  * leading zero (or an all-digit password) must never be turned into a number.
  */
 class PesertaExport extends StringValueBinder implements FromQuery, ShouldAutoSize, WithCustomValueBinder, WithEvents, WithHeadings, WithMapping, WithStyles

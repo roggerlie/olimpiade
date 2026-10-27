@@ -70,7 +70,7 @@ test('it keeps the uploaded file permanently under a linux-safe name and imports
     Jenjang::factory()->create(['nama' => 'SD']);
 
     $csv = "noreg,nama,jenjang,asal_sekolah,password\n"
-        ."1000000001,Budi Santoso,SD,SD Contoh,\n";
+        ."1000001,Budi Santoso,SD,SD Contoh,\n";
 
     Livewire::test('admin.peserta.import')
         ->set('file', UploadedFile::fake()->createWithContent('Data Peserta KELAS 6.CSV', $csv))
@@ -83,5 +83,5 @@ test('it keeps the uploaded file permanently under a linux-safe name and imports
     expect($stored)->toHaveCount(1)
         ->and($stored[0])->toMatch('#^imports/peserta/\d{8}_\d{6}_[a-z0-9]{6}_data-peserta-kelas-6\.csv$#')
         ->and(Storage::disk('local')->get($stored[0]))->toBe($csv)
-        ->and(Peserta::where('noreg', '1000000001')->exists())->toBeTrue();
+        ->and(Peserta::where('noreg', '1000001')->exists())->toBeTrue();
 });

@@ -21,8 +21,8 @@ class PesertaFactory extends Factory
     {
         return [
             'jenjang_id' => Jenjang::factory(),
-            // 10 digits, matching a real NISN.
-            'noreg' => fake()->unique()->numerify('##########'),
+            // 7 digits, matching a real No. Registrasi.
+            'noreg' => fake()->unique()->numerify('#######'),
             'nama' => fake()->name(),
             'asal_sekolah' => fake()->company().' School',
             'password' => static::$password ??= Hash::make('password'),

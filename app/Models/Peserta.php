@@ -20,7 +20,7 @@ use Illuminate\Notifications\Notifiable;
 /**
  * A peserta's own login account — authenticated via the `peserta` guard
  * (see config/auth.php), entirely separate from App\Models\User (admin
- * accounts only). Logs in with `noreg` (their NISN), not a separate
+ * accounts only). Logs in with `noreg` (7-digit No. Registrasi), not a separate
  * username: the two were always kept in sync under the old paired-User
  * design, so there's nothing to keep distinct by having its own column.
  *
