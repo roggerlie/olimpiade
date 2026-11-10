@@ -32,6 +32,9 @@
                             <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">
                                 <div class="font-medium text-gray-800 dark:text-white/90">{{ $ujian->nama }}</div>
                                 <div class="text-xs text-gray-500 dark:text-gray-400">{{ $ujian->bankSoal->nama }} · {{ $ujian->jumlah_soal }} soal</div>
+                                @unless ($ujian->tampilkan_nilai)
+                                    <x-ui.badge color="warning" class="mt-1">Nilai disembunyikan</x-ui.badge>
+                                @endunless
                             </td>
                             <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $ujian->jenjang->nama }} · {{ $ujian->pelajaran->nama }}</td>
                             <td class="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">
@@ -129,6 +132,20 @@
                     <textarea wire:model="deskripsi" rows="3"
                         class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></textarea>
                     @error('deskripsi') <p class="mt-1 text-sm text-error-500">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+                    <label for="ujian-tampilkan-nilai" class="flex cursor-pointer items-start gap-3">
+                        <input type="checkbox" id="ujian-tampilkan-nilai" wire:model="tampilkanNilai"
+                            class="mt-0.5 size-5 shrink-0 rounded-md border-gray-300 text-brand-500 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900" />
+                        <span>
+                            <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tampilkan nilai ke peserta</span>
+                            <span class="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">
+                                Jika dimatikan, peserta hanya melihat "Ujian selesai" tanpa nilai, benar, dan salah. Bisa dinyalakan lagi kapan saja untuk mengumumkan nilai.
+                            </span>
+                        </span>
+                    </label>
+                    @error('tampilkanNilai') <p class="mt-1 text-sm text-error-500">{{ $message }}</p> @enderror
                 </div>
             </div>
 

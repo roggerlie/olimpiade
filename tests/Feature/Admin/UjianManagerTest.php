@@ -126,3 +126,43 @@ test('it refuses to delete an ujian already registered by a peserta ujian', func
 
     expect(Ujian::find($ujian->id))->not->toBeNull();
 });
+
+test('new ujian show nilai to peserta by default', function () {
+    actingAsAdmin();
+    $bankSoal = BankSoal::factory()->create();
+    Soal::factory()->count(3)->create(['bank_soal_id' => $bankSoal->id]);
+
+    Livewire::test('admin.ujian.manager')
+        ->call('create')
+        ->assertSet('tampilkanNilai', true)
+        ->set(basePayload($bankSoal))
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(Ujian::sole()->tampilkan_nilai)->toBeTrue();
+});
+
+test('the admin can hide nilai and reveal it again later', function () {
+    actingAsAdmin();
+    $ujian = Ujian::factory()->create(['jumlah_soal' => 2]);
+    Soal::factory()->count(3)->create(['bank_soal_id' => $ujian->bank_soal_id]);
+
+    Livewire::test('admin.ujian.manager')
+        ->call('edit', $ujian->id)
+        ->assertSet('tampilkanNilai', true)
+        ->set('tampilkanNilai', false)
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertSee('Nilai disembunyikan');
+
+    expect($ujian->fresh()->tampilkan_nilai)->toBeFalse();
+
+    Livewire::test('admin.ujian.manager')
+        ->call('edit', $ujian->id)
+        ->assertSet('tampilkanNilai', false)
+        ->set('tampilkanNilai', true)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($ujian->fresh()->tampilkan_nilai)->toBeTrue();
+});

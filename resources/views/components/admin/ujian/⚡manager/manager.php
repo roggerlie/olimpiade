@@ -29,6 +29,8 @@ new class extends Component
 
     public ?string $deskripsi = null;
 
+    public bool $tampilkanNilai = true;
+
     public bool $showModal = false;
 
     public ?string $statusMessage = null;
@@ -75,6 +77,7 @@ new class extends Component
         $this->sesiMulai = $ujian->sesi_mulai->format('Y-m-d\TH:i');
         $this->sesiSelesai = $ujian->sesi_selesai->format('Y-m-d\TH:i');
         $this->deskripsi = $ujian->deskripsi;
+        $this->tampilkanNilai = $ujian->tampilkan_nilai;
         $this->showModal = true;
     }
 
@@ -90,6 +93,7 @@ new class extends Component
                 'sesiMulai' => $this->sesiMulai,
                 'sesiSelesai' => $this->sesiSelesai,
                 'deskripsi' => $this->deskripsi,
+                'tampilkanNilai' => $this->tampilkanNilai,
             ],
             [
                 'bankSoalId' => ['required', 'exists:bank_soal,id'],
@@ -98,6 +102,7 @@ new class extends Component
                 'sesiMulai' => ['required', 'date'],
                 'sesiSelesai' => ['required', 'date', 'after:sesiMulai'],
                 'deskripsi' => ['nullable', 'string'],
+                'tampilkanNilai' => ['boolean'],
             ],
             attributes: [
                 'sesiMulai' => 'waktu mulai',
@@ -130,6 +135,7 @@ new class extends Component
             'sesi_mulai' => $sesiMulai,
             'sesi_selesai' => $sesiSelesai,
             'deskripsi' => $data['deskripsi'],
+            'tampilkan_nilai' => $data['tampilkanNilai'],
         ];
 
         if ($this->editingId) {
@@ -168,7 +174,7 @@ new class extends Component
 
     private function resetForm(): void
     {
-        $this->reset(['editingId', 'bankSoalId', 'nama', 'jumlahSoal', 'sesiMulai', 'sesiSelesai', 'deskripsi']);
+        $this->reset(['editingId', 'bankSoalId', 'nama', 'jumlahSoal', 'sesiMulai', 'sesiSelesai', 'deskripsi', 'tampilkanNilai']);
         $this->resetErrorBag();
     }
 };

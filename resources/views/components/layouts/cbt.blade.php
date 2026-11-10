@@ -1,4 +1,9 @@
-@props(['title' => 'CBT'])
+{{--
+    `preview`: rendered for an admin (web guard) previewing the exam sheet —
+    see admin/bank-soal/preview.blade.php. There's no peserta logged in then,
+    so the header shows the admin instead of the peserta menu.
+--}}
+@props(['title' => 'CBT', 'preview' => false])
 
 <!DOCTYPE html>
 {{--
@@ -34,17 +39,24 @@
             <div class="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-pbsf-gold/60 via-pbsf-blue/60 to-pbsf-rain/60"></div>
 
             <div class="mx-auto flex max-w-(--breakpoint-xl) items-center justify-between gap-4 px-4 py-2.5 md:px-6">
-                <a href="{{ route('cbt.dashboard') }}" class="flex items-center gap-3">
+                <a href="{{ $preview ? route('admin.dashboard') : route('cbt.dashboard') }}" class="flex items-center gap-3">
                     {{-- gupab.png is square with ~11% transparent padding per side, so it's
                          sized up to 48px (emblem ≈ 37px, level with the two-line label) and
                          -my-1 keeps the header at the same height the old 40px logo gave it. --}}
                     <img src="{{ asset('images/logo/gupab.png') }}" alt="Yayasan Prof. Dr. H. Kadirun Yahya" width="291" height="291"
                         class="-my-1 size-12 shrink-0 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,.45)]" />
                     <span class="hidden border-l border-white/15 pl-3 text-xs leading-tight font-semibold tracking-[.12em] text-[#8e9acb] uppercase sm:block">
-                        Portal CBT<br><span class="text-pbsf-gold-light">Peserta</span>
+                        Portal CBT<br><span class="text-pbsf-gold-light">{{ $preview ? 'Preview Admin' : 'Peserta' }}</span>
                     </span>
                 </a>
 
+                @if ($preview)
+                    <div class="flex items-center gap-2.5 rounded-full border border-pbsf-gold/30 bg-pbsf-gold/10 py-1 pr-3 pl-1 text-sm font-medium text-[#dfe5f5]">
+                        <x-cbt.avatar :name="auth('web')->user()->name" class="size-8 text-xs" />
+                        <span class="hidden max-w-48 truncate sm:block">{{ auth('web')->user()->name }}</span>
+                        <span class="rounded-full bg-pbsf-gold px-2 py-0.5 text-[10px] font-bold tracking-wider text-pbsf-navy uppercase">Preview</span>
+                    </div>
+                @else
                 {{-- User menu --}}
                 <x-common.dropdown-menu>
                     <x-slot name="button">
@@ -69,6 +81,7 @@
                         </form>
                     </x-slot>
                 </x-common.dropdown-menu>
+                @endif
             </div>
         </header>
 

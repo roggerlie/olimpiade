@@ -6,6 +6,10 @@
     $nilai = (float) $pesertaUjian->nilai;
     $nilaiMaksimal = max(1, $jumlahSoal * 9);
     $persen = max(0, min(100, $nilai / $nilaiMaksimal * 100));
+
+    // The admin can hide nilai per ujian (Ujian form → "Tampilkan nilai ke
+    // peserta") until it's announced — then nothing score-related renders.
+    $tampilkanNilai = $pesertaUjian->ujian->tampilkan_nilai;
 @endphp
 
 <x-layouts.cbt title="Hasil Ujian">
@@ -34,6 +38,13 @@
                 @endif
             </p>
 
+            @unless ($tampilkanNilai)
+                <div class="relative mx-auto my-8 flex size-24 items-center justify-center rounded-full bg-pbsf-rain/15 ring-1 ring-pbsf-rain/40">
+                    <svg class="size-12 text-[#52c2ae]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7" /></svg>
+                </div>
+                <p class="relative text-lg font-bold">Ujian selesai</p>
+                <p class="relative mt-2 text-sm text-[#aab4d4]">Jawabanmu sudah tersimpan. Nilai akan diumumkan oleh panitia.</p>
+            @else
             {{-- Score ring: fills to nilai / (jumlah soal × 9) while the number counts up --}}
             <div class="relative mx-auto my-8 size-48"
                 x-data="{
@@ -93,6 +104,7 @@
             </div>
 
             <p class="relative mt-4 text-xs text-[#8e9acb]">Dari {{ $jumlahSoal }} soal</p>
+            @endunless
         </div>
 
         <div class="mt-6 text-center">
@@ -100,7 +112,7 @@
         </div>
     </div>
 
-    @if ($nilai > 0)
+    @if ($tampilkanNilai && $nilai > 0)
         @push('scripts')
             <script>
                 // Light gold/biru/teal confetti burst — once per attempt per

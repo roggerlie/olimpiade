@@ -42,6 +42,27 @@ Route::middleware('permission:bank-soal.manage')->group(function (): void {
     Route::get('bank-soal/{bankSoal}/soal', function (BankSoal $bankSoal) {
         return view('admin.bank-soal.soal', ['bankSoal' => $bankSoal->load(['jenjang', 'pelajaran'])]);
     })->name('bank-soal.soal');
+    // Read-only preview of the bank as peserta see it (cbt/partials/lembar-ujian):
+    // every soal in its original order, without the `jawaban` column — the
+    // preview is meant to look exactly like the real exam sheet.
+    Route::get('bank-soal/{bankSoal}/preview', function (BankSoal $bankSoal) {
+        $soal = $bankSoal->soal()
+            ->orderBy('id')
+            ->get(['id', 'pertanyaan', 'pilih_a', 'pilih_b', 'pilih_c', 'pilih_d', 'pilih_e'])
+            ->values()
+            ->map(fn (Soal $soal, int $index) => [
+                'soalId' => $soal->id,
+                'urutan' => $index + 1,
+                'pertanyaan' => $soal->pertanyaan,
+                'pilihan' => $soal->pilihan(),
+                'jawabanSaya' => null,
+            ]);
+
+        return view('admin.bank-soal.preview', [
+            'bankSoal' => $bankSoal->load(['jenjang', 'pelajaran']),
+            'soal' => $soal,
+        ]);
+    })->name('bank-soal.preview');
     // Tambah/Ubah Soal are their own pages (not a modal on the list above)
     // — the six TinyMCE editors need real room. One Livewire component
     // (admin.soal.form) serves both; `soal` route-model-binds only for edit.

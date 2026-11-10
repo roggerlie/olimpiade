@@ -9,7 +9,11 @@
             </div>
 
             @can('bank-soal.manage')
-                <div class="flex gap-3">
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ route('admin.bank-soal.preview', $bankSoalId) }}" target="_blank" rel="noopener"
+                        class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-3.5 text-sm font-medium text-gray-700 shadow-theme-xs transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03]">
+                        Preview Tampilan Peserta
+                    </a>
                     <x-ui.button variant="outline" wire:click="$dispatch('open-soal-import-modal')">Import Soal</x-ui.button>
                     <a href="{{ route('admin.bank-soal.soal.create', $bankSoalId) }}"
                         class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 py-3.5 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600">

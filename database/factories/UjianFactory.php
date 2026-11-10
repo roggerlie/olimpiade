@@ -33,6 +33,15 @@ class UjianFactory extends Factory
             'sesi_mulai' => $sesiMulai,
             'sesi_selesai' => $sesiSelesai,
             'deskripsi' => fake()->optional()->sentence(),
+            'tampilkan_nilai' => true,
         ];
+    }
+
+    /**
+     * Peserta don't get to see their nilai after finishing.
+     */
+    public function nilaiDisembunyikan(): static
+    {
+        return $this->state(fn (array $attributes) => ['tampilkan_nilai' => false]);
     }
 }

@@ -206,3 +206,31 @@ test('hasil shows the score once submitted', function () {
         ->assertOk()
         ->assertSee('27');
 });
+
+test('hasil hides nilai, benar and salah when the ujian hides nilai', function () {
+    $peserta = actingAsPeserta();
+    $ujian = ujianDenganSoal(2, ['tampilkan_nilai' => false]);
+    $pesertaUjian = PesertaUjian::factory()->selesai()->create([
+        'peserta_id' => $peserta->id, 'ujian_id' => $ujian->id, 'nilai' => 27,
+    ]);
+
+    $this->get(route('cbt.ujian.hasil', $pesertaUjian))
+        ->assertOk()
+        ->assertSee('Ujian selesai')
+        ->assertSee('Nilai akan diumumkan oleh panitia.')
+        ->assertDontSee('Nilai Kamu')
+        ->assertDontSee('Benar');
+});
+
+test('the dashboard shows nilai only for ujian that reveal it', function () {
+    $peserta = actingAsPeserta();
+    $terbuka = ujianDenganSoal(2);
+    $tertutup = ujianDenganSoal(2, ['tampilkan_nilai' => false]);
+    PesertaUjian::factory()->selesai()->create(['peserta_id' => $peserta->id, 'ujian_id' => $terbuka->id, 'nilai' => 31]);
+    PesertaUjian::factory()->selesai()->create(['peserta_id' => $peserta->id, 'ujian_id' => $tertutup->id, 'nilai' => 47]);
+
+    $this->get(route('cbt.dashboard'))
+        ->assertOk()
+        ->assertSee('Nilai 31')
+        ->assertDontSee('Nilai 47');
+});

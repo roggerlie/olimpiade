@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Table(name: 'ujian')]
 #[Fillable([
     'bank_soal_id', 'jenjang_id', 'pelajaran_id', 'nama',
-    'jumlah_soal', 'durasi_detik', 'sesi_mulai', 'sesi_selesai', 'deskripsi',
+    'jumlah_soal', 'durasi_detik', 'sesi_mulai', 'sesi_selesai', 'deskripsi', 'tampilkan_nilai',
 ])]
 class Ujian extends Model
 {
@@ -23,7 +23,7 @@ class Ujian extends Model
 
     protected function atributDicatat(): array
     {
-        return ['bank_soal_id', 'jenjang_id', 'pelajaran_id', 'nama', 'jumlah_soal', 'durasi_detik', 'sesi_mulai', 'sesi_selesai', 'deskripsi'];
+        return ['bank_soal_id', 'jenjang_id', 'pelajaran_id', 'nama', 'jumlah_soal', 'durasi_detik', 'sesi_mulai', 'sesi_selesai', 'deskripsi', 'tampilkan_nilai'];
     }
 
     protected function jenisAktivitas(): string
@@ -41,6 +41,7 @@ class Ujian extends Model
         return [
             'sesi_mulai' => 'datetime',
             'sesi_selesai' => 'datetime',
+            'tampilkan_nilai' => 'boolean',
         ];
     }
 

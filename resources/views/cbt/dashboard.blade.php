@@ -143,7 +143,7 @@
 
                         <div class="flex items-center gap-3">
                             @if ($su->sudahSubmit())
-                                <span class="rounded-full border border-pbsf-rain/40 bg-pbsf-rain/15 px-3 py-1.5 text-xs font-semibold text-[#86dbcc]">Selesai &middot; Nilai {{ $su->nilai }}</span>
+                                <span class="rounded-full border border-pbsf-rain/40 bg-pbsf-rain/15 px-3 py-1.5 text-xs font-semibold text-[#86dbcc]">Selesai @if ($su->ujian->tampilkan_nilai)&middot; Nilai {{ $su->nilai }}@endif</span>
                                 <a href="{{ route('cbt.ujian.hasil', $su) }}" class="pbsf-btn-ghost">Lihat Hasil</a>
                             @elseif ($su->waktu_mulai)
                                 <span class="rounded-full border border-pbsf-gold/40 bg-pbsf-gold/10 px-3 py-1.5 text-xs font-semibold text-pbsf-gold-light">Sedang Berlangsung</span>
