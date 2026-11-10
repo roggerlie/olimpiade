@@ -8,7 +8,7 @@
                 <a href="{{ route('admin.bank-soal.soal.template', $bankSoalId) }}" class="text-brand-500 hover:text-brand-600">Unduh template Excel</a>.
             </p>
             <p class="mb-5 text-sm text-gray-500 dark:text-gray-400">
-                <strong class="font-medium text-gray-700 dark:text-gray-300">Word</strong> — bisa disisipin gambar di pertanyaan & tiap pilihan.
+                <strong class="font-medium text-gray-700 dark:text-gray-300">Word</strong> — bisa disisipin gambar dan rumus (Insert → Equation) di pertanyaan & tiap pilihan.
                 <a href="{{ route('admin.bank-soal.soal.template-word', $bankSoalId) }}" class="text-brand-500 hover:text-brand-600">Unduh template Word</a>,
                 isi tabelnya, jangan bikin dokumen baru dari nol.
             </p>
@@ -24,6 +24,16 @@
                     <ul class="mt-2 max-h-40 list-disc space-y-1 overflow-y-auto pl-4">
                         @foreach ($importErrors as $error)
                             <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </x-ui.alert>
+            @endif
+
+            @if (!empty($importWarnings))
+                <x-ui.alert variant="warning" class="mb-4" title="{{ count($importWarnings) }} catatan — soal tetap diimport, tapi cek lagi">
+                    <ul class="mt-2 max-h-40 list-disc space-y-1 overflow-y-auto pl-4">
+                        @foreach ($importWarnings as $peringatan)
+                            <li>{{ $peringatan }}</li>
                         @endforeach
                     </ul>
                 </x-ui.alert>

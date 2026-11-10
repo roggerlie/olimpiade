@@ -26,6 +26,9 @@ new class extends Component
     /** @var array<int, string> */
     public array $importErrors = [];
 
+    /** @var array<int, string> Imported rows the admin should double-check (Word only). */
+    public array $importWarnings = [];
+
     public function mount(int $bankSoalId): void
     {
         $this->bankSoalId = $bankSoalId;
@@ -44,7 +47,7 @@ new class extends Component
     #[On('open-soal-import-modal')]
     public function open(): void
     {
-        $this->reset(['file', 'imported', 'importErrors']);
+        $this->reset(['file', 'imported', 'importErrors', 'importWarnings']);
         $this->resetErrorBag();
         $this->showModal = true;
     }
@@ -95,6 +98,7 @@ new class extends Component
 
         $this->imported = $importer->imported;
         $this->importErrors = $importer->errors;
+        $this->importWarnings = $importer instanceof SoalWordImport ? $importer->peringatan : [];
         $this->file = null;
 
         if ($importer->imported > 0) {

@@ -71,7 +71,11 @@ return [
         // `data` scheme handler at all in the first place.
         'soal' => [
             'HTML.Doctype' => 'HTML 4.01 Transitional',
-            'HTML.Allowed' => 'p,br,strong,b,em,i,u,sup,sub,ul,ol,li,table,thead,tbody,tr,td[colspan|rowspan],th[colspan|rowspan],img[src|alt|width|height|class|style|align|data-mathml|role]',
+            // The MathML tail (math … mtd) is what App\Imports\SoalWordImport
+            // turns Word's own equations into (see App\Support\OmmlKeMathml);
+            // the elements themselves are registered in custom_definition below.
+            'HTML.Allowed' => 'p,br,strong,b,em,i,u,sup,sub,ul,ol,li,table,thead,tbody,tr,td[colspan|rowspan],th[colspan|rowspan],img[src|alt|width|height|class|style|align|data-mathml|role]'
+                .',math[display],mrow,mi,mn,mo,mtext,msup,msub,msubsup,mfrac[linethickness],msqrt,mroot,mover[accent],munder[accentunder],munderover,mtable,mtr,mtd',
             'CSS.AllowedProperties' => 'vertical-align,max-width',
             'URI.AllowedSchemes' => 'http,https,data',
             'AutoFormat.AutoParagraph' => true,
@@ -83,7 +87,9 @@ return [
         ],
         'custom_definition' => [
             'id' => 'html5-definitions',
-            'rev' => 1,
+            // Bump whenever the elements/attributes below change — it's the
+            // key HTMLPurifier caches the compiled definition under.
+            'rev' => 2,
             'debug' => false,
             'elements' => [
                 // http://developers.whatwg.org/sections.html
@@ -128,6 +134,29 @@ return [
                 // http://developers.whatwg.org/edits.html
                 ['ins', 'Block', 'Flow', 'Common', ['cite' => 'URI', 'datetime' => 'CDATA']],
                 ['del', 'Block', 'Flow', 'Common', ['cite' => 'URI', 'datetime' => 'CDATA']],
+
+                // MathML (presentation subset) — Word equations imported by
+                // App\Imports\SoalWordImport. Modelled loosely as inline
+                // elements holding inline content; only the 'soal' preset's
+                // HTML.Allowed actually lets them through.
+                ['math', 'Inline', 'Inline', 'Common', ['display' => 'Enum#block,inline']],
+                ['mrow', 'Inline', 'Inline', 'Common'],
+                ['mi', 'Inline', 'Inline', 'Common'],
+                ['mn', 'Inline', 'Inline', 'Common'],
+                ['mo', 'Inline', 'Inline', 'Common'],
+                ['mtext', 'Inline', 'Inline', 'Common'],
+                ['msup', 'Inline', 'Inline', 'Common'],
+                ['msub', 'Inline', 'Inline', 'Common'],
+                ['msubsup', 'Inline', 'Inline', 'Common'],
+                ['mfrac', 'Inline', 'Inline', 'Common', ['linethickness' => 'Text']],
+                ['msqrt', 'Inline', 'Inline', 'Common'],
+                ['mroot', 'Inline', 'Inline', 'Common'],
+                ['mover', 'Inline', 'Inline', 'Common', ['accent' => 'Enum#true,false']],
+                ['munder', 'Inline', 'Inline', 'Common', ['accentunder' => 'Enum#true,false']],
+                ['munderover', 'Inline', 'Inline', 'Common'],
+                ['mtable', 'Inline', 'Inline', 'Common'],
+                ['mtr', 'Inline', 'Inline', 'Common'],
+                ['mtd', 'Inline', 'Inline', 'Common'],
             ],
             'attributes' => [
                 ['iframe', 'allowfullscreen', 'Bool'],
